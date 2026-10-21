@@ -1,0 +1,23 @@
+# DATA QUALITY REPORT
+
+> Báo cáo này được tự động sinh ra từ `src/02_data_quality_assessment.py`. Chỉ ghi nhận và đánh giá mức độ ảnh hưởng của các vấn đề dữ liệu (DETECT + ASSESS + DOCUMENT).
+
+| Table | Column | Issue | Affected Rows | Percentage | Severity | Proposed Treatment | Reason |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| olist_geolocation_dataset.csv | All Columns | Duplicate Rows | 261,831 | 26.18% | High | Drop duplicates in Phase 4 | Duplicate rows cause double counting in analysis. |
+| olist_orders_dataset.csv | order_approved_at | Missing Values | 160 | 0.16% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_orders_dataset.csv | order_delivered_carrier_date | Missing Values | 1,783 | 1.79% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_orders_dataset.csv | order_delivered_customer_date | Missing Values | 2,965 | 2.98% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_order_payments_dataset.csv | payment_value | Zero Payment_value Value | 9 | 0.0087% | Medium | Investigate potential discounts / test orders | Zero monetary values distort Average Order Value (AOV). |
+| olist_order_reviews_dataset.csv | review_comment_title | Missing Values | 87,656 | 88.34% | High | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_category_name | Missing Values | 610 | 1.85% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_name_lenght | Missing Values | 610 | 1.85% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_description_lenght | Missing Values | 610 | 1.85% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_photos_qty | Missing Values | 610 | 1.85% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_weight_g | Missing Values | 2 | 0.01% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_length_cm | Missing Values | 2 | 0.01% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_height_cm | Missing Values | 2 | 0.01% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_products_dataset.csv | product_width_cm | Missing Values | 2 | 0.01% | Medium | Investigate in Phase 4 (Fillna / Flag) | Missing attribute data can distort group-by aggregations. |
+| olist_orders_dataset.csv | delivery_days | Extreme Delivery Outlier (> 90 Days) | 76 | 0.08% | Medium | Flag and analyze separately in Phase 6 | Extreme outliers skew mean delivery time metrics. |
+| olist_orders_dataset.csv | order_id | Orphan Orders (No Items) | 775 | 0.78% | High | Exclude from Revenue analysis / Keep for Order Conversion | Cannot calculate product revenue without order item details. |
+| olist_products_dataset.csv | product_category_name | Unmapped English Category Translation | 2 | 2.74% | Medium | Translate manually or assign "Others" based on volume in Phase 4 | Missing translation breaks English dashboard categories. |

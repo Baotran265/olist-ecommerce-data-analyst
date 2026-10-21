@@ -1,0 +1,50 @@
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs (Visual Studio Code, PyCharm)
+.vscode/
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data (Ignore raw and master analytical data, KEEP Star Schema CSVs)
+data/raw/*.csv
+data/raw/*.zip
+data/processed/*.parquet
+data/processed/*.csv
+!data/processed/star_schema/
+!data/processed/star_schema/*.csv
+
+# Database (Ignore local SQLite database file, reproducible via src/05_build_star_schema.py)
+data/*.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Power BI (Keep only the official production dashboard file)
+*.pbit
+*.pbix
+!powerbi/Olist_Ecommerce_Analytics_Dashboard.pbix
+
+# Logs & OS generated files
+*.log
+.DS_Store
+.DS_Store?
+._*
+._.*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
