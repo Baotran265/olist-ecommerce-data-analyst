@@ -2,13 +2,14 @@ import os
 import sys
 import pandas as pd
 import numpy as np
-# pyright: ignore[missing-import]
 import matplotlib.pyplot as plt
-# pyright: ignore[missing-import]
 import seaborn as sns
+from scipy import stats
 
-# Cấu hình UTF-8 cho Windows console
-sys.stdout.reconfigure(encoding='utf-8')
+# Cấu hình UTF-8 cho Windows console an toàn trong môi trường terminal/Jupyter
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 
 # ==========================================
 # 1. CONFIGURATION & STYLING
@@ -211,13 +212,15 @@ def analyze_seller_risk_matrix(df):
         avg_dispatch_days=('seller_dispatch_days', 'mean')
     ).reset_index()
 
-    # Định nghĩa ngưỡng High Revenue (>= 15,000 R$) và Low Review (< 3.8)
+    # Định nghĩa ngưỡng High Revenue (>= 15,000 R$) và Review Score (3.8 & 4.2)
     REV_THRESHOLD = 15000
-    REVIEW_THRESHOLD = 3.8
+    REVIEW_LOW_THRESHOLD = 3.8
+    REVIEW_HIGH_THRESHOLD = 4.2
 
-    seller_stats['quadrant'] = 'Normal'
-    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_THRESHOLD), 'quadrant'] = 'High Risk (Intervene)'
-    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_THRESHOLD), 'quadrant'] = 'Star Sellers (Top Performers)'
+    seller_stats['quadrant'] = 'Normal (< 15k R$)'
+    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_LOW_THRESHOLD), 'quadrant'] = 'High Risk (Intervene)'
+    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_LOW_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Standard High-Volume'
+    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Star Sellers (Top Performers)'
 
     high_risk_sellers = seller_stats[seller_stats['quadrant'] == 'High Risk (Intervene)'].sort_values(by='total_revenue', ascending=False)
     high_risk_sellers.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q3_high_risk_sellers.csv'), index=False)
@@ -231,7 +234,12 @@ def analyze_seller_risk_matrix(df):
         x='total_revenue',
         y='avg_review',
         hue='quadrant',
-        palette={'Normal': '#d9d9d9', 'Star Sellers (Top Performers)': ACCENT_GREEN, 'High Risk (Intervene)': ACCENT_RED},
+        palette={
+            'Normal (< 15k R$)': '#d9d9d9',
+            'Standard High-Volume': PRIMARY_COLOR,
+            'Star Sellers (Top Performers)': ACCENT_GREEN,
+            'High Risk (Intervene)': ACCENT_RED
+        },
         alpha=0.8,
         s=60,
         ax=ax
@@ -239,10 +247,11 @@ def analyze_seller_risk_matrix(df):
 
     ax.set_xscale('log')
     ax.axvline(REV_THRESHOLD, color='gray', linestyle=':')
-    ax.axhline(REVIEW_THRESHOLD, color='gray', linestyle=':')
+    ax.axhline(REVIEW_LOW_THRESHOLD, color='gray', linestyle=':')
+    ax.axhline(REVIEW_HIGH_THRESHOLD, color='gray', linestyle=':')
 
     # Highlight High Risk Quadrant
-    ax.annotate('CRITICAL INTERVENTION ZONE\n(High Revenue, Low Review < 3.8)',
+    ax.annotate('CRITICAL INTERVENTION ZONE\n(High Revenue >= 15k R$, Low Review < 3.8)',
                 xy=(REV_THRESHOLD * 1.5, 2.0),
                 fontsize=11, fontweight='bold', color=ACCENT_RED,
                 bbox=dict(boxstyle="round,pad=0.5", fc="#ffebeb", ec=ACCENT_RED, lw=1))
@@ -264,7 +273,7 @@ def analyze_seller_risk_matrix(df):
 # ==========================================
 def analyze_category_performance(df):
     print("--- [Question 4] Product Category Performance Matrix ---")
-    deliv = df[df['order_status'] == 'delivered'].copy()
+    deliv = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
 
     # 1. Tính toán an toàn, chuẩn xác và tận dụng C-engine của Pandas (Tránh lambda closure trên deliv.loc)
     cat_stats = deliv.groupby('product_category_formatted').agg(
@@ -357,6 +366,26 @@ def analyze_customer_retention(df):
     print("Impact of 1st Order Delivery on Repeat Completed Purchases:")
     print(retention_by_delay)
 
+    # Statistical significance test (Chi-Square Test of Independence)
+    # Contingency table: [[repeat_ontime, nonrepeat_ontime], [repeat_delayed, nonrepeat_delayed]]
+    ontime_df = deliv_first[deliv_first['is_delayed'] == 0]
+    delayed_df = deliv_first[deliv_first['is_delayed'] == 1]
+    
+    table = [
+        [ontime_df['is_repeat_customer'].sum(), len(ontime_df) - ontime_df['is_repeat_customer'].sum()],
+        [delayed_df['is_repeat_customer'].sum(), len(delayed_df) - delayed_df['is_repeat_customer'].sum()]
+    ]
+    chi2, p_val, dof, ex = stats.chi2_contingency(table)
+    on_time_rate = retention_by_delay.loc[0, 'repeat_rate']
+    delayed_rate = retention_by_delay.loc[1, 'repeat_rate']
+    abs_drop = on_time_rate - delayed_rate
+    drop_pct = (abs_drop / on_time_rate) * 100
+
+    print(f"\nStatistical Significance Test (Chi-Square):")
+    print(f"Chi2: {chi2:.4f}, p-value: {p_val:.4e} (p < 0.05: {p_val < 0.05})")
+    print(f"Absolute drop: {abs_drop:.2f} percentage points ({on_time_rate:.2f}% -> {delayed_rate:.2f}%)")
+    print(f"Relative drop: {drop_pct:.1f}%\n")
+
     # Trực quan hóa
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -364,17 +393,17 @@ def analyze_customer_retention(df):
     total_cust = total_cust_deliv
     repeat_count = repeat_deliv_count
     sizes = [total_cust - repeat_count, repeat_count]
-    labels = [f"One-Time Buyers\n({sizes[0]:,} - {sizes[0]/total_cust*100:.1f}%)",
-              f"Repeat Buyers\n({sizes[1]:,} - {sizes[1]/total_cust*100:.1f}%)"]
+    labels = [f"One-Time Buyers\n({sizes[0]:,})",
+              f"Repeat Buyers\n({sizes[1]:,})"]
     colors = ['#aec7e8', PRIMARY_COLOR]
     ax1.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors, pctdistance=0.75,
             wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2))
-    ax1.set_title('Overall Customer Retention Rate\n(E-commerce marketplace standard: low repeat rate ~3.1%)', fontsize=12, fontweight='bold')
+    ax1.set_title(f'Overall Customer Retention Rate\n(Delivered-only: {repeat_deliv_pct:.2f}% | All statuses: {repeat_all_pct:.2f}%)', fontsize=12, fontweight='bold')
 
     # Subplot 2: Tác động của trải nghiệm giao hàng đơn đầu đến việc quay lại mua
     bars = ax2.bar(retention_by_delay['status_label'], retention_by_delay['repeat_rate'],
                    color=[ACCENT_GREEN, ACCENT_RED], width=0.45, edgecolor='black', linewidth=0.5)
-    ax2.set_title('Impact of 1st Order Delivery on Customer Retention\n(19% drop in repeat purchase rate if 1st order is delayed)',
+    ax2.set_title(f'Impact of 1st Order Delivery on Customer Retention\n({drop_pct:.1f}% relative drop in repeat purchase rate if 1st order is delayed)',
                   fontsize=12, fontweight='bold', pad=15)
     ax2.set_ylabel('Repeat Purchase Rate (%)', fontsize=11)
     ax2.set_ylim(0, 4.2)
@@ -385,12 +414,11 @@ def analyze_customer_retention(df):
                      xytext=(0, 6), textcoords="offset points", ha='center', va='bottom', fontsize=11, fontweight='bold')
 
     # Vẽ mũi tên so sánh sụt giảm
-    drop_pct = (retention_by_delay.loc[0, 'repeat_rate'] - retention_by_delay.loc[1, 'repeat_rate']) / retention_by_delay.loc[0, 'repeat_rate'] * 100
-    ax2.annotate(f"-{drop_pct:.1f}% relative drop!",
-                 xy=(1, retention_by_delay.loc[1, 'repeat_rate']),
-                 xytext=(0.5, 3.6),
+    ax2.annotate(f"-{drop_pct:.1f}% relative drop!\n(p-value = {p_val:.3e})",
+                 xy=(1, delayed_rate),
+                 xytext=(0.5, 3.5),
                  arrowprops=dict(facecolor=ACCENT_RED, shrink=0.08, width=1.5, headwidth=6),
-                 fontsize=10.5, fontweight='bold', color=ACCENT_RED)
+                 fontsize=10, fontweight='bold', color=ACCENT_RED)
 
     plt.tight_layout()
     fig_path = os.path.join(OUTPUT_FIGURES_DIR, 'fig5_customer_retention_and_first_order_impact.png')

@@ -2,7 +2,7 @@
 
 > **Dự án:** Olist Brazilian E-Commerce Analytics  
 > **Thư mục dữ liệu kết nối:** `data/processed/star_schema/`  
-> **Mục tiêu:** Hướng dẫn kết nối dữ liệu vào Power BI Desktop, thiết lập quan hệ Star Schema chuẩn 1-N (Single Direction), và cung cấp 20+ công thức DAX Measures cốt lõi.
+> **Mục tiêu:** Hướng dẫn kết nối dữ liệu vào Power BI Desktop, thiết lập quan hệ Star Schema chuẩn 1-N (Single Direction), và cung cấp 22 công thức DAX Measures cốt lõi.
 
 ---
 
@@ -47,7 +47,7 @@ DISTINCTCOUNT(fact_order_items[order_id])
 Total Items Sold = 
 COUNTROWS(fact_order_items)
 
--- 3. Tổng Doanh thu sản phẩm (Net Revenue / GMV)
+-- 3. Tổng Doanh thu sản phẩm (Revenue = SUM(price), tất cả trạng thái)
 Total Revenue = 
 SUM(fact_order_items[price])
 
@@ -55,19 +55,26 @@ SUM(fact_order_items[price])
 Total Freight = 
 SUM(fact_order_items[freight_value])
 
--- 5. Tổng giá trị đơn hàng (Gross Merchandise Value)
+-- 5. Tổng giá trị đơn hàng (Gross Order Value = price + freight)
 Gross Order Value = 
 SUM(fact_order_items[item_total_value])
 
--- 6. Tỷ trọng Phí ship trên Doanh thu hàng hóa (% Freight of GMV)
-Freight % of GMV = 
-DIVIDE([Total Freight], [Total Revenue], 0)
-
--- 6b. Tỷ trọng Phí ship trên Tổng giá trị đơn hàng gồm cước (% Freight of Gross Order Value)
-Freight Ratio % = 
+-- 6. Tỷ trọng Phí ship trên Tổng giá trị đơn hàng (Freight / Gross Order Value)
+--    ⚠️ Tên measure phải đồng nhất với SQL Q4 (freight_pct_of_gov).
+--    Revenue = SUM(price), GOV = price + freight. Freight Ratio = freight / GOV.
+Freight Ratio % of GOV = 
 DIVIDE([Total Freight], [Gross Order Value], 0)
 
--- 7. Giá trị đơn hàng trung bình (Average Order Value - AOV)
+-- 7. Doanh thu chỉ tính đơn giao thành công hợp lệ (Delivered Revenue)
+--    ⚠️ Dùng cho các measure Seller Risk (#20, #21) để đồng nhất với Python & SQL
+Delivered Revenue = 
+CALCULATE(
+    SUM(fact_order_items[price]),
+    fact_order_items[order_status] = "delivered",
+    fact_order_items[is_valid_delivered] = 1
+)
+
+-- 8. Giá trị đơn hàng trung bình (Average Order Value - AOV)
 AOV = 
 DIVIDE([Gross Order Value], [Total Orders], 0)
 ```
@@ -77,46 +84,47 @@ DIVIDE([Gross Order Value], [Total Orders], 0)
 ### Nhóm 2: Delivery & Logistics Performance (Hiệu suất Vận chuyển)
 
 ```dax
--- 8. Số đơn hàng đã giao thành công hợp lệ (có ngày giao thực tế)
+-- 9. Số đơn hàng đã giao thành công hợp lệ (có ngày giao thực tế)
 Delivered Orders = 
 CALCULATE(
-    [Total Orders],
+    DISTINCTCOUNT(fact_order_items[order_id]),
     fact_order_items[order_status] = "delivered",
     fact_order_items[is_valid_delivered] = 1
 )
 
--- 9. Số đơn hàng bị giao trễ hẹn (Delivered Late)
+-- 10. Số đơn hàng bị giao trễ hẹn (Delivered Late)
 Delayed Orders = 
 CALCULATE(
     [Delivered Orders],
     fact_order_items[is_delayed] = 1
 )
 
--- 10. Tỷ lệ giao hàng trễ (% Delay Rate)
+-- 11. Tỷ lệ giao hàng trễ (% Delay Rate)
 Delay Rate % = 
-DIVIDE([Delayed Orders], [Delivered Orders], 0)
+DIVIDE([Delayed Orders], [Delivered Orders])
 
--- 11. Tỷ lệ giao hàng đúng hạn (% On-Time Delivery Rate)
+-- 12. Tỷ lệ giao hàng đúng hạn (% On-Time Delivery Rate)
+--     ⚠️ Không truyền tham số thứ 3 cho DIVIDE → trả về BLANK khi empty context
+--     (thay vì hiện "1" trên visual khi không có dữ liệu)
 On-Time Delivery Rate % = 
-1 - [Delay Rate %]
+DIVIDE([Delivered Orders] - [Delayed Orders], [Delivered Orders])
 
--- 12. Thời gian giao hàng thực tế trung bình (Grain-Safe)
+-- 13. Thời gian giao hàng thực tế trung bình (Grain-Safe)
 --     ⚠️ Delivery days là order-level → phải deduplicate về order_id
---     (Xem docs/07_data_modeling_and_star_schema.md §3.6 - Grain Mismatch)
 Avg Delivery Days = 
 AVERAGEX(
     VALUES(fact_order_items[order_id]),
     CALCULATE(AVERAGE(fact_order_items[actual_delivery_days]))
 )
 
--- 13. Thời gian giao hàng dự kiến trung bình (Grain-Safe)
+-- 14. Thời gian giao hàng dự kiến trung bình (Grain-Safe)
 Avg Estimated Days = 
 AVERAGEX(
     VALUES(fact_order_items[order_id]),
     CALCULATE(AVERAGE(fact_order_items[estimated_delivery_days]))
 )
 
--- 14. Số ngày trễ trung bình đối với các đơn bị trễ (Grain-Safe)
+-- 15. Số ngày trễ trung bình đối với các đơn bị trễ (Grain-Safe)
 Avg Days Delayed = 
 CALCULATE(
     AVERAGEX(
@@ -132,9 +140,9 @@ CALCULATE(
 ### Nhóm 3: Customer Satisfaction & Review Metrics (Đánh giá Khách hàng)
 
 ```dax
--- 15. Điểm đánh giá trung bình (Average Review Score - Delivered Orders, Grain-Safe)
+-- 16. Điểm đánh giá trung bình (Average Review Score - Delivered Orders, Grain-Safe)
 --     ⚠️ Phải deduplicate về order-level vì review_score là order-grain.
---     Đồng thời lọc đơn giao thành công hợp lệ để đồng bộ với Python & Benchmark (4.16 ★).
+--     Đồng thời lọc đơn giao thành công hợp lệ để đồng bộ với Python & Benchmark.
 Avg Review Score = 
 CALCULATE(
     AVERAGEX(
@@ -145,38 +153,23 @@ CALCULATE(
     fact_order_items[is_valid_delivered] = 1
 )
 
--- 15a. Điểm đánh giá trung bình toàn sàn (Tất cả trạng thái đơn hàng có review: 4.10 ★)
-Avg Review Score (All Orders) = 
-AVERAGEX(
-    SUMMARIZE(fact_order_items, fact_order_items[order_id], fact_order_items[review_score]),
-    fact_order_items[review_score]
-)
-
--- 15b. Tổng số đơn có đánh giá hợp lệ (Valid Reviews Count)
+-- 17. Tổng số đơn có đánh giá hợp lệ (Valid Reviews Count)
 Valid Reviews Count = 
 CALCULATE(
     [Delivered Orders],
     NOT(ISBLANK(fact_order_items[review_score]))
 )
 
--- 16. Số lượt đánh giá 1 sao (1-Star Count)
+-- 18. Số lượt đánh giá 1 sao (1-Star Count)
 1-Star Reviews = 
 CALCULATE(
     [Delivered Orders],
     fact_order_items[review_score] = 1
 )
 
--- 17. Tỷ lệ đánh giá 1 sao (% 1-Star Ratio trên tập có đánh giá)
+-- 19. Tỷ lệ đánh giá 1 sao (% 1-Star Ratio trên tập có đánh giá)
 1-Star Rate % = 
 DIVIDE([1-Star Reviews], [Valid Reviews Count], 0)
-
--- 18. Tỷ lệ đánh giá 5 sao (% 5-Star Ratio trên tập có đánh giá)
-5-Star Rate % = 
-DIVIDE(
-    CALCULATE([Delivered Orders], fact_order_items[review_score] = 5),
-    [Valid Reviews Count],
-    0
-)
 ```
 
 ---
@@ -184,35 +177,56 @@ DIVIDE(
 ### Nhóm 4: Customer Retention & Risk Management (Giữ chân & Rủi ro)
 
 ```dax
--- 19. Số khách hàng duy nhất (Unique Customers)
+-- 20. Số khách hàng duy nhất (Unique Customers)
+--     ⚠️ Sử dụng CALCULATE + DISTINCTCOUNT trên fact table để phản ứng
+--     đúng khi slicer lọc theo ngành hàng, tháng, hoặc trạng thái đơn.
+--     Nếu dùng trực tiếp DISTINCTCOUNT(dim_customers[customer_unique_id]),
+--     kết quả luôn là tổng 96,096 khách bất kể slicer nào.
 Total Unique Customers = 
-DISTINCTCOUNT(dim_customers[customer_unique_id])
-
--- 20. Trạng thái rủi ro của Seller (Seller Risk Tier)
---     ⚠️ Measure này trả về TEXT, chỉ hoạt động đúng khi có context của seller_id
---     Dùng trong Table/Matrix Visual (không dùng trong Card tổng quát)
-Seller Risk Flag = 
-IF(
-    [Total Revenue] >= 15000 && [Avg Review Score] < 3.8,
-    "High Risk - Audit Required",
-    IF([Total Revenue] >= 15000 && [Avg Review Score] >= 4.2, "Star Seller", "Standard")
+CALCULATE(
+    DISTINCTCOUNT(dim_customers[customer_unique_id]),
+    fact_order_items
 )
 
--- 21. Số lượng Seller rủi ro cao (Dùng cho KPI Card tổng quát)
---     Được bọc điều kiện đơn giao thành công hợp lệ để đồng bộ 100% với Python & SQL (ra đúng 16 sellers)
+-- 21. Trạng thái rủi ro của Seller (Seller Risk Tier)
+--     ⚠️ Measure này trả về TEXT, chỉ hoạt động đúng khi có context của seller_id
+--     Dùng trong Table/Matrix Visual (không dùng trong Card tổng quát)
+--     ⚠️ Sử dụng [Delivered Revenue] để đồng nhất với Python & SQL Q3
+Seller Risk Flag = 
+IF(
+    [Delivered Revenue] >= 15000 && [Avg Review Score] < 3.8,
+    "High Risk - Audit Required",
+    IF(
+        [Delivered Revenue] >= 15000 && [Avg Review Score] >= 4.2,
+        "Star Seller",
+        IF(
+            [Delivered Revenue] >= 15000,
+            "Standard High-Volume",
+            "Standard"
+        )
+    )
+)
+
+-- 22. Số lượng Seller rủi ro cao (Dùng cho KPI Card tổng quát)
+--     ⚠️ Sử dụng [Delivered Revenue] thay vì [Total Revenue] để đồng bộ 100%
+--     với Python & SQL (ra đúng 16 sellers)
 High Risk Sellers Count = 
 COUNTROWS(
     FILTER(
         ADDCOLUMNS(
             VALUES(fact_order_items[seller_id]),
-            "Rev", CALCULATE([Total Revenue], fact_order_items[order_status] = "delivered", fact_order_items[is_valid_delivered] = 1),
+            "Rev", CALCULATE(
+                SUM(fact_order_items[price]),
+                fact_order_items[order_status] = "delivered",
+                fact_order_items[is_valid_delivered] = 1
+            ),
             "Review", [Avg Review Score]
         ),
         [Rev] >= 15000 && [Review] < 3.8
     )
 )
 
--- 22. Tỷ lệ khách hàng mua lại hoàn tất (Repeat Purchase Rate - Delivered Orders Only)
+-- 23. Tỷ lệ khách hàng mua lại hoàn tất (Repeat Purchase Rate - Delivered Orders Only)
 --     Khách hàng có >= 2 đơn hàng giao thành công / Tổng khách hàng có đơn giao thành công
 --     Lưu ý kỹ thuật DAX: Sử dụng cấu trúc tường minh để không phụ thuộc vào hướng quan hệ 2 chiều (Bidirectional)
 Repeat Purchase Rate % = 

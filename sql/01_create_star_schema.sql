@@ -1,7 +1,7 @@
 -- ====================================================================
 -- OLIST E-COMMERCE: STAR SCHEMA DDL DEFINITION
 -- Architecture: Kimball Dimensional Model (Star Schema)
--- Engine Compatibility: PostgreSQL, SQLite, DuckDB, BigQuery
+-- Engine Compatibility: PostgreSQL, SQLite, DuckDB
 -- ====================================================================
 
 -- --------------------------------------------------------------------
@@ -110,9 +110,11 @@ CREATE TABLE IF NOT EXISTS fact_order_items (
 -- --------------------------------------------------------------------
 -- 6. PERFORMANCE INDEXES
 -- --------------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_fact_order ON fact_order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_fact_cust ON fact_order_items(customer_id);
 CREATE INDEX IF NOT EXISTS idx_fact_seller ON fact_order_items(seller_id);
 CREATE INDEX IF NOT EXISTS idx_fact_prod ON fact_order_items(product_id);
 CREATE INDEX IF NOT EXISTS idx_fact_date ON fact_order_items(order_date_key);
 CREATE INDEX IF NOT EXISTS idx_fact_status ON fact_order_items(order_status);
 CREATE INDEX IF NOT EXISTS idx_fact_delayed ON fact_order_items(is_delayed);
+

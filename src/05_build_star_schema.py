@@ -4,8 +4,9 @@ import sqlite3
 import pandas as pd
 import numpy as np
 
-# Cấu hình UTF-8
-sys.stdout.reconfigure(encoding='utf-8')
+# Cấu hình UTF-8 an toàn
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
 # 1. CONFIGURATION & PATHS
@@ -31,16 +32,18 @@ def build_dim_date():
 
     df_date = pd.DataFrame({'date': dates})
     df_date['date_key'] = df_date['date'].dt.strftime('%Y%m%d').astype(int)
-    df_date['year'] = df_date['date'].dt.year
-    df_date['quarter'] = 'Q' + df_date['date'].dt.quarter.astype(str)
+    df_date['date'] = df_date['date'].dt.strftime('%Y-%m-%d')
+    df_date['year'] = pd.to_datetime(df_date['date']).dt.year
+    df_date['quarter'] = 'Q' + pd.to_datetime(df_date['date']).dt.quarter.astype(str)
     df_date['year_quarter'] = df_date['year'].astype(str) + '-' + df_date['quarter']
-    df_date['month'] = df_date['date'].dt.month
-    df_date['month_name'] = df_date['date'].dt.strftime('%B')
-    df_date['year_month'] = df_date['date'].dt.strftime('%Y-%m')
-    df_date['day_of_month'] = df_date['date'].dt.day
-    df_date['day_of_week'] = df_date['date'].dt.dayofweek + 1  # 1 = Monday, 7 = Sunday
-    df_date['day_name'] = df_date['date'].dt.strftime('%A')
+    df_date['month'] = pd.to_datetime(df_date['date']).dt.month
+    df_date['month_name'] = pd.to_datetime(df_date['date']).dt.strftime('%B')
+    df_date['year_month'] = pd.to_datetime(df_date['date']).dt.strftime('%Y-%m')
+    df_date['day_of_month'] = pd.to_datetime(df_date['date']).dt.day
+    df_date['day_of_week'] = pd.to_datetime(df_date['date']).dt.dayofweek + 1  # 1 = Monday, 7 = Sunday
+    df_date['day_name'] = pd.to_datetime(df_date['date']).dt.strftime('%A')
     df_date['is_weekend'] = df_date['day_of_week'].isin([6, 7]).astype(int)
+
 
     out_csv = os.path.join(STAR_SCHEMA_DIR, 'dim_date.csv')
     df_date.to_csv(out_csv, index=False)
@@ -172,9 +175,7 @@ def load_into_sqlite(dim_date, dim_cust, dim_sellers, dim_products, fact_items):
     dim_products.to_sql('dim_products', conn, if_exists='append', index=False)
     fact_items.to_sql('fact_order_items', conn, if_exists='append', index=False)
 
-    # 3. Tạo bổ sung chỉ mục tối ưu truy vấn
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_fact_order ON fact_order_items(order_id);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_dim_date ON dim_date(date_key);")
+    # 3. Commit và hoàn tất (Các indexes đã được khởi tạo chuẩn xác trong DDL script)
     conn.commit()
 
     print(f"  -> Star Schema successfully loaded into SQLite: {DB_PATH}")

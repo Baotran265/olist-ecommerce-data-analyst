@@ -105,13 +105,16 @@ WITH seller_orders AS (
 ),
 seller_summary AS (
     -- Bước 2: Tổng hợp lên cấp độ người bán (Seller Level)
+    -- Lưu ý: Giữ raw_avg_review (chưa làm tròn) để so ngưỡng chính xác, tránh lệch với DAX
     SELECT 
         s.seller_id,
         s.seller_city,
         s.seller_state,
+        SUM(so.order_revenue) AS raw_total_revenue,
         ROUND(SUM(so.order_revenue), 2) AS total_revenue,
         COUNT(so.order_id) AS total_orders,
         SUM(so.items_in_order) AS items_sold,
+        AVG(so.order_review_score) AS raw_avg_review,
         ROUND(AVG(so.order_review_score), 2) AS avg_review_score,
         ROUND(AVG(so.is_order_delayed) * 100.0, 2) AS order_delay_rate_pct,
         ROUND(AVG(so.avg_dispatch_days), 1) AS avg_dispatch_days
@@ -130,34 +133,37 @@ SELECT
     order_delay_rate_pct,
     avg_dispatch_days,
     CASE 
-        WHEN total_revenue >= 15000 AND avg_review_score < 3.8 THEN 'CRITICAL RISK - AUDIT REQUIRED'
-        WHEN total_revenue >= 15000 AND avg_review_score >= 4.2 THEN 'STAR SELLER'
+        WHEN raw_total_revenue >= 15000 AND raw_avg_review < 3.8 THEN 'CRITICAL RISK - AUDIT REQUIRED'
+        WHEN raw_total_revenue >= 15000 AND raw_avg_review >= 4.2 THEN 'STAR SELLER'
+        WHEN raw_total_revenue >= 15000 THEN 'STANDARD HIGH-VOLUME'
         ELSE 'STANDARD'
     END AS operational_status
 FROM seller_summary
-WHERE total_revenue >= 15000 AND avg_review_score < 3.8
-ORDER BY total_revenue DESC
-LIMIT 10;
+WHERE raw_total_revenue >= 15000 AND raw_avg_review < 3.8
+ORDER BY total_revenue DESC;
 
 
 -- --------------------------------------------------------------------
 -- QUERY 4: PRODUCT CATEGORY PERFORMANCE & FREIGHT BURDEN
--- Business Goal: Evaluate GMV, Freight % of GMV, and ratings by category.
+-- Business Goal: Evaluate Revenue, Freight % of Gross Order Value, and ratings by category.
 -- Methodology Note: Categories are item-level attributes. Aggregation is performed
 -- directly at fact_order_items grain (item-level), weighting reviews and delays by
 -- items sold in each category (consistent with Python category performance analysis).
+-- Naming: Revenue = SUM(price), Gross Order Value = price + freight, Freight Ratio = freight / GOV
 -- --------------------------------------------------------------------
 SELECT 
     p.product_category_formatted AS category_name,
     COUNT(f.order_item_id) AS items_sold,
     ROUND(SUM(f.price), 2) AS total_revenue,
     ROUND(SUM(f.freight_value), 2) AS total_freight,
-    ROUND(SUM(f.freight_value) * 100.0 / SUM(f.item_total_value), 2) AS freight_pct_of_total,
+    ROUND(SUM(f.item_total_value), 2) AS gross_order_value,
+    ROUND(SUM(f.freight_value) * 100.0 / SUM(f.item_total_value), 2) AS freight_pct_of_gov,
     ROUND(AVG(f.review_score), 2) AS avg_review_score,
     ROUND(AVG(f.is_delayed) * 100.0, 2) AS delay_rate_pct
 FROM fact_order_items f
 JOIN dim_products p ON f.product_id = p.product_id
 WHERE f.order_status = 'delivered'
+  AND f.is_valid_delivered = 1
 GROUP BY p.product_category_formatted
 ORDER BY total_revenue DESC
 LIMIT 15;

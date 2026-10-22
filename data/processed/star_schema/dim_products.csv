@@ -1627,7 +1627,7 @@ a7906a8a69acf5b0cb256882e741896a,Sports Leisure,sports_leisure,5150.0,100.0,9.0,
 fa05a3cc2d44ecc49e3e6c5a80958845,Watches Gifts,watches_gifts,500.0,25.0,13.0,13.0,1.0
 112c98970afb0e6dd81c05ddd447416d,Home Appliances,home_appliances,200.0,27.0,13.0,17.0,4.0
 af79de12e005e141b22ab97c807e76d3,Fashion Bags Accessories,fashion_bags_accessories,100.0,16.0,14.0,14.0,1.0
-0105b5323d24fc655f73052694dbbb3a,Pc Gamer,pc_gamer,2839.0,19.0,16.0,18.0,4.0
+0105b5323d24fc655f73052694dbbb3a,PC Gamer,pc_gamer,2839.0,19.0,16.0,18.0,4.0
 819386cf1eea26ae023a2895cd2f73d1,Construction Tools Construction,construction_tools_construction,2100.0,54.0,10.0,11.0,1.0
 a73636de818ae69b7e3e92b9a3380c53,Sports Leisure,sports_leisure,750.0,28.0,15.0,15.0,1.0
 7f2097ece1964900e1f72465c57dcc67,Bed Bath Table,bed_bath_table,300.0,25.0,3.0,19.0,1.0
@@ -5820,7 +5820,7 @@ e41879396cfe504fa2e6951eb7e5a76c,Health Beauty,health_beauty,500.0,19.0,17.0,15.
 f23d24b737a58861ed576d2128c439e4,Bed Bath Table,bed_bath_table,1800.0,16.0,50.0,40.0,1.0
 0a29ce51f88190dc32d9f6a23f7e9a8c,Housewares,housewares,150.0,19.0,4.0,11.0,4.0
 700a315aa104dcf3ea345a850f746ec1,Fashion Sport,fashion_sport,1500.0,70.0,15.0,65.0,1.0
-6fd83eb3e0799b775e4f946bd66657c0,Small Appliances Food Preparers,small_appliances_food_preparers,1200.0,25.0,33.0,25.0,1.0
+6fd83eb3e0799b775e4f946bd66657c0,Kitchen & Food Processors,kitchen_and_food_processors,1200.0,25.0,33.0,25.0,1.0
 2b4609f8948be18874494203496bc318,Health Beauty,health_beauty,250.0,22.0,10.0,18.0,3.0
 53d9d735cbf1969f1f2661b9b2c661be,Housewares,housewares,750.0,25.0,10.0,15.0,1.0
 9f81413382c6e7b2b2eaff6930f1fd98,Food,food,450.0,16.0,18.0,11.0,1.0
@@ -7324,7 +7324,7 @@ d9d3f97d19971e6e134c04428b7ef416,Furniture Decor,furniture_decor,600.0,16.0,12.0
 164ef5973ee113556104727b850ae68f,Stationery,stationery,700.0,50.0,18.0,34.0,1.0
 cc99f9e6673b4a99658d70f73c3bf1e6,Furniture Decor,furniture_decor,1150.0,37.0,5.0,28.0,1.0
 60583a83a08e3bb8c9fd974983021a34,Housewares,housewares,3600.0,46.0,19.0,32.0,5.0
-5d923ead886c44b86845f69e50520c3e,Small Appliances Food Preparers,small_appliances_food_preparers,1200.0,25.0,33.0,25.0,1.0
+5d923ead886c44b86845f69e50520c3e,Kitchen & Food Processors,kitchen_and_food_processors,1200.0,25.0,33.0,25.0,1.0
 424894ddaa2676e63fa0ec704d7132af,Fashion Bags Accessories,fashion_bags_accessories,200.0,24.0,9.0,16.0,1.0
 f8d3e4ddff67f24dc2e481c6ed11c505,Housewares,housewares,750.0,28.0,20.0,28.0,5.0
 b9a248fd2814f6564a158c8f3c2b1db3,Watches Gifts,watches_gifts,200.0,16.0,2.0,11.0,6.0
@@ -7477,7 +7477,7 @@ f7566c7c51e266442be8db4b8797ee1f,Construction Tools Construction,construction_to
 9ac3471b9357338ea8054108a00389e3,Telephony,telephony,150.0,17.0,17.0,17.0,1.0
 6fd29b4c024c598e9339e67a7469be43,Watches Gifts,watches_gifts,225.0,28.0,10.0,18.0,1.0
 48fcadc21e52503298f6f6519475c3e1,Baby,baby,650.0,36.0,15.0,25.0,1.0
-6727051471a0fc4a0e7737b57bff2549,Pc Gamer,pc_gamer,650.0,16.0,22.0,20.0,3.0
+6727051471a0fc4a0e7737b57bff2549,PC Gamer,pc_gamer,650.0,16.0,22.0,20.0,3.0
 e4c20c867bf5ef9bd109b0ba8a60cd5c,Auto,auto,9050.0,60.0,30.0,30.0,1.0
 0257013d9462b3b6e9892bdd10ebe14d,Fashion Bags Accessories,fashion_bags_accessories,300.0,20.0,10.0,20.0,1.0
 edfb12f6fd9cb4fb1eec00ad28ea5c74,Fashion Bags Accessories,fashion_bags_accessories,100.0,16.0,11.0,11.0,3.0
@@ -8818,7 +8818,7 @@ ba461a0fdc83975aeb97c66b1dea2802,Signaling And Security,signaling_and_security,4
 153d581044c5b30836c5a7d56687a735,Sports Leisure,sports_leisure,1150.0,105.0,10.0,15.0,1.0
 1583253d78b23f7808214770298e0118,Consoles Games,consoles_games,250.0,17.0,2.0,14.0,1.0
 a87567bdce60de6f901e3d7c6d8df820,Bed Bath Table,bed_bath_table,1800.0,55.0,10.0,35.0,1.0
-bed164d9d628cf0593003389c535c6e0,Small Appliances Food Preparers,small_appliances_food_preparers,850.0,30.0,21.0,22.0,2.0
+bed164d9d628cf0593003389c535c6e0,Kitchen & Food Processors,kitchen_and_food_processors,850.0,30.0,21.0,22.0,2.0
 c0047dd512738c1a067099c37b78f627,Baby,baby,200.0,16.0,5.0,11.0,1.0
 94252831daf1ef36429398257ea0450c,Furniture Living Room,furniture_living_room,1375.0,63.0,11.0,16.0,1.0
 5fe986940fc67df6769cf784fb063395,Computers Accessories,computers_accessories,150.0,16.0,5.0,11.0,2.0
@@ -11038,7 +11038,7 @@ c7671984ff3e8376c2998f75bf1447d9,Construction Tools Safety,construction_tools_sa
 f8b5807c6dfdce709e2872a820c1c7b1,Musical Instruments,musical_instruments,650.0,26.0,10.0,22.0,4.0
 24a046fcc8b971ab9962537f2694bc77,Bed Bath Table,bed_bath_table,2150.0,33.0,19.0,45.0,2.0
 57ea8ad500d0af10bc5fbf3bf2b7d400,Baby,baby,550.0,23.0,33.0,11.0,3.0
-1220978a08a6b29a202bc015b18250e9,Small Appliances Food Preparers,small_appliances_food_preparers,1200.0,25.0,33.0,25.0,1.0
+1220978a08a6b29a202bc015b18250e9,Kitchen & Food Processors,kitchen_and_food_processors,1200.0,25.0,33.0,25.0,1.0
 ce5cedf6e57d59b07eeecb68eeafd099,Home Appliances 2,home_appliances_2,2750.0,32.0,32.0,16.0,1.0
 f943f91d49d1d1179438fb3964e1724d,Fashion Bags Accessories,fashion_bags_accessories,100.0,17.0,3.0,12.0,1.0
 4413a608a42bd21bbf9d5abbd58c249a,Cool Stuff,cool_stuff,2350.0,16.0,40.0,16.0,1.0
@@ -14265,7 +14265,7 @@ b425f28bf3d41f70cc18da7a525ee65c,Furniture Decor,furniture_decor,600.0,20.0,10.0
 b6e352d888ba31d8999af279cd63aa24,Housewares,housewares,1225.0,27.0,26.0,26.0,2.0
 500e3950a78a1d326f2bf3dc389799c2,Fashion Bags Accessories,fashion_bags_accessories,150.0,16.0,5.0,11.0,5.0
 3795823a832215210d81bb4f8fafc95b,Computers Accessories,computers_accessories,200.0,41.0,2.0,29.0,2.0
-ae62bb0f95af63d64eae5f93dddea8d3,Small Appliances Food Preparers,small_appliances_food_preparers,10600.0,40.0,20.0,38.0,1.0
+ae62bb0f95af63d64eae5f93dddea8d3,Kitchen & Food Processors,kitchen_and_food_processors,10600.0,40.0,20.0,38.0,1.0
 aacedc250d7cd501e3edd7550aec2ed2,Furniture Decor,furniture_decor,2800.0,50.0,20.0,40.0,1.0
 a05f4c1d544848f9ee86f767c9cc0d4f,Computers Accessories,computers_accessories,366.0,20.0,6.0,15.0,5.0
 927c2974fc11ccce0fcd4910175f6ca0,Auto,auto,200.0,16.0,12.0,11.0,1.0
@@ -16181,7 +16181,7 @@ e5359c08663240bdc10d5bec26e491c0,Sports Leisure,sports_leisure,300.0,27.0,9.0,14
 fa39c60599eb6573020f07a1b4dd38cf,Housewares,housewares,1183.0,38.0,18.0,26.0,1.0
 ea06ed5e6920832c45747b44049051a7,Toys,toys,1256.0,28.0,26.0,30.0,1.0
 5837bba0ce6e35e6f2dc5c3e223e3276,Furniture Decor,furniture_decor,2.0,11.0,11.0,52.0,2.0
-1954739d84629e7323a4295812a3e0ec,Small Appliances Food Preparers,small_appliances_food_preparers,750.0,30.0,30.0,30.0,4.0
+1954739d84629e7323a4295812a3e0ec,Kitchen & Food Processors,kitchen_and_food_processors,750.0,30.0,30.0,30.0,4.0
 dc4f0da054d6a37385d337699c7ab043,Furniture Decor,furniture_decor,3700.0,30.0,30.0,30.0,1.0
 ab44178963b4bf809adc477810f9175d,Christmas Supplies,christmas_supplies,50.0,16.0,6.0,11.0,4.0
 036ecb2f1816e95d3fa658207266ecf5,Books General Interest,books_general_interest,150.0,26.0,2.0,26.0,1.0
@@ -16929,7 +16929,7 @@ c02a979508b4fbd64ce1db1ccd8dd6fa,Computers Accessories,computers_accessories,190
 b3b7212d2d34d5d36defa076a827633e,Watches Gifts,watches_gifts,250.0,16.0,11.0,11.0,3.0
 2ea69b98f8a98247adf9aaba9367bddf,Auto,auto,100.0,24.0,2.0,17.0,6.0
 03d10117bf5dbd1e4f194566be73de5a,Bed Bath Table,bed_bath_table,2350.0,45.0,15.0,35.0,1.0
-dbe520fb381ad695a7e1f2807d20c765,Pc Gamer,pc_gamer,800.0,18.0,22.0,22.0,6.0
+dbe520fb381ad695a7e1f2807d20c765,PC Gamer,pc_gamer,800.0,18.0,22.0,22.0,6.0
 1d2e2390743b4ac67bbd2b5d95577e2f,Telephony,telephony,100.0,18.0,6.0,11.0,2.0
 6ed0ed10d62b45f3de46933b0b2989a6,Baby,baby,700.0,30.0,40.0,50.0,1.0
 e4568ff2a2b3b7249d96a870f3563c8b,Health Beauty,health_beauty,2550.0,17.0,17.0,20.0,1.0
@@ -17799,7 +17799,7 @@ e7cfb5f52c08494aeb59190d03ddf5f8,Garden Tools,garden_tools,10700.0,30.0,30.0,30.
 4fbd8f51817097372c985d1d042cdeed,Sports Leisure,sports_leisure,550.0,80.0,20.0,13.0,5.0
 30b1231ba07a2b463b2197fd37716be6,Housewares,housewares,900.0,19.0,14.0,16.0,3.0
 76d11bfd9f3974c6f750e89582654ea4,Telephony,telephony,50.0,18.0,6.0,11.0,3.0
-c7a3f1a7f9eef146cc499368b578b884,Small Appliances Food Preparers,small_appliances_food_preparers,7350.0,40.0,30.0,23.0,5.0
+c7a3f1a7f9eef146cc499368b578b884,Kitchen & Food Processors,kitchen_and_food_processors,7350.0,40.0,30.0,23.0,5.0
 a95e101cee281e7cd36dfef5f80fabfe,Agro Industry And Commerce,agro_industry_and_commerce,9700.0,47.0,70.0,27.0,6.0
 46b173c179c7e6904a5728959bee5b3a,Toys,toys,550.0,17.0,15.0,22.0,2.0
 cad04bbd56e9e1392a586f51477a7e3b,Housewares,housewares,550.0,60.0,10.0,15.0,2.0
@@ -18188,7 +18188,7 @@ c367cd626353eda46b3db64e735c2f6f,Baby,baby,600.0,25.0,5.0,26.0,1.0
 a8dc21a89753260d1d111c12004835c9,Market Place,market_place,200.0,27.0,15.0,15.0,4.0
 52b626c2fc8fffbcd01084202221bf48,Garden Tools,garden_tools,2000.0,37.0,25.0,37.0,2.0
 0d2c4fbee7db55f38a730f4dd40a9f81,Housewares,housewares,250.0,17.0,10.0,14.0,2.0
-1dceebcc5f23c02ea23e16d5bedca000,Cds Dvds Musicals,cds_dvds_musicals,550.0,35.0,15.0,25.0,2.0
+1dceebcc5f23c02ea23e16d5bedca000,CDs / DVDs / Musicals,cds_dvds_musicals,550.0,35.0,15.0,25.0,2.0
 8e312c483d79e02dbc1d68cce77e26c8,Bed Bath Table,bed_bath_table,500.0,25.0,5.0,15.0,1.0
 6e0b3bc6a8bcfcca9005f9d220fe4af8,Furniture Decor,furniture_decor,1900.0,35.0,45.0,35.0,1.0
 e6f7ac15692aee63b79778de70c3d9fa,Health Beauty,health_beauty,1900.0,25.0,20.0,20.0,1.0
@@ -18609,7 +18609,7 @@ a4d28309950a3658ecbe8ee7395bac12,Housewares,housewares,1050.0,30.0,12.0,30.0,5.0
 70488833a84564f5dceaa93e1a99fae5,Auto,auto,3500.0,65.0,25.0,25.0,2.0
 404c6e8590cbb06f8c5e911d8a90b1e5,Sports Leisure,sports_leisure,2700.0,60.0,15.0,15.0,2.0
 42a953368300be8c91cc2fc62fda2aba,Fixed Telephony,fixed_telephony,255.0,16.0,12.0,13.0,3.0
-7afdd65f79f63819ff5bee328843fa37,Small Appliances Food Preparers,small_appliances_food_preparers,750.0,20.0,20.0,20.0,1.0
+7afdd65f79f63819ff5bee328843fa37,Kitchen & Food Processors,kitchen_and_food_processors,750.0,20.0,20.0,20.0,1.0
 5494497e1078148d7b0e41d4551412a7,Bed Bath Table,bed_bath_table,1250.0,19.0,17.0,23.0,1.0
 7a10f0794d6c8bf257417ac22866e78d,Auto,auto,1675.0,25.0,15.0,20.0,1.0
 587ff13bc6c58e023e298ac897fa1a3c,Office Furniture,office_furniture,15200.0,58.0,28.0,58.0,1.0
@@ -26889,7 +26889,7 @@ f225b2857ac11c1ec879e0c81996ed9f,Bed Bath Table,bed_bath_table,950.0,16.0,10.0,1
 d5dceef582538ae853072860d4bff29e,Toys,toys,600.0,25.0,13.0,20.0,1.0
 429cf9c31b3ba3f4de81507a63f98724,Garden Tools,garden_tools,12200.0,33.0,7.0,33.0,2.0
 6daadc7e6029cf01762f941e488caa1b,Toys,toys,6794.0,38.0,24.0,50.0,5.0
-a4756663d007b0cd1af865754d08d968,Small Appliances Food Preparers,small_appliances_food_preparers,650.0,22.0,6.0,14.0,4.0
+a4756663d007b0cd1af865754d08d968,Kitchen & Food Processors,kitchen_and_food_processors,650.0,22.0,6.0,14.0,4.0
 69918318f27e9853c6d2a68906018a14,Perfumery,perfumery,700.0,30.0,30.0,30.0,1.0
 bfb75349b7e539cd61141437d6de176a,Furniture Decor,furniture_decor,3000.0,69.0,11.0,11.0,1.0
 5fe23e6307c231e287f13c0a4be06c88,Small Appliances,small_appliances,1350.0,52.0,25.0,29.0,1.0
@@ -29918,7 +29918,7 @@ f8bb2d19e05c6738d6a11ace3936b153,Home Appliances,home_appliances,4750.0,47.0,13.
 7e23aeb084e4f123bb9127b00c20e47e,Watches Gifts,watches_gifts,200.0,20.0,7.0,15.0,2.0
 5e954c4ed342c50436d25d5f50a34919,Computers,computers,3200.0,30.0,7.0,40.0,7.0
 0bbf093ffaa05565b79b64ee97f917cb,Office Furniture,office_furniture,11575.0,57.0,55.0,22.0,1.0
-cb9d764f38ee4d0c00af64d5c388f837,Small Appliances Food Preparers,small_appliances_food_preparers,625.0,28.0,27.0,24.0,1.0
+cb9d764f38ee4d0c00af64d5c388f837,Kitchen & Food Processors,kitchen_and_food_processors,625.0,28.0,27.0,24.0,1.0
 23601216d4de33d54c6801f27dc59357,Baby,baby,9400.0,75.0,15.0,50.0,2.0
 8adde8ed66e628e94f29b9832156ab08,Furniture Decor,furniture_decor,500.0,80.0,10.0,60.0,2.0
 1ecbc86db1d81121dcf8790e2fa31ddd,Housewares,housewares,200.0,16.0,10.0,14.0,3.0

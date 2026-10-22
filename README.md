@@ -5,7 +5,7 @@
 ![Power BI](https://img.shields.io/badge/Power%20BI-Interactive%20Dashboard-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
 ![Kaggle Dataset](https://img.shields.io/badge/Kaggle%20Dataset-Olist%20E--Commerce-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)
 
-Dự án phân tích dữ liệu toàn diện (End-to-End Data Analytics Portfolio) khai thác hành trình của hơn **100.000 đơn hàng thực tế** trên nền tảng thương mại điện tử Olist (Brazil). Dự án tập trung giải quyết bài toán: **Ảnh hưởng của sự chậm trễ vận chuyển (logistics delay) đối với mức độ hài lòng khách hàng (review score), tỷ lệ giữ chân khách hàng (retention rate), và nhận diện các rủi ro vận hành trong mạng lưới đối tác bán hàng (sellers).**
+Dự án phân tích dữ liệu toàn diện (End-to-End Data Analytics Portfolio) khai thác hành trình của gần **100.000 đơn hàng thực tế** (99.441 đơn hàng, 112.650 dòng sản phẩm) trên nền tảng thương mại điện tử Olist (Brazil). Dự án tập trung giải quyết bài toán: **Ảnh hưởng của sự chậm trễ vận chuyển (logistics delay) đối với mức độ hài lòng khách hàng (review score), tỷ lệ giữ chân khách hàng (retention rate), và nhận diện các rủi ro vận hành trong mạng lưới đối tác bán hàng (sellers).**
 
 ---
 
@@ -34,7 +34,7 @@ Dựa trên việc làm sạch và phân tích **96.470 đơn hàng đã giao th
 4. **Tỷ lệ khách hàng mua lại hoàn tất (Repeat Completed Purchases): 3.00%:**
    * Trong 93.358 khách hàng có đơn giao thành công, chỉ có **2.801 khách hàng** từng hoàn tất giao dịch lần thứ 2 trở lên (**3.00%**). Nếu tính trên mọi đơn đặt hàng (kể cả đơn hủy/chưa hoàn tất), tỷ lệ này là **3.12%** (2.997 / 96.096 khách hàng).
 5. **Hiệu ứng đòn bẩy từ trải nghiệm đơn hàng đầu tiên (First-Order Leverage):**
-   * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng thành công **giảm 17.4%** (từ 3.04% xuống chỉ còn 2.51%) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
+   * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng thành công **giảm 16.0%** (từ 3.03% xuống chỉ còn 2.55%, p-value = 0.031) so với những khách hàng nhận đơn đầu tiên đúng hẹn. Sự khác biệt này có ý nghĩa thống kê (Chi-Square test, p < 0.05).
 
 > 📌 **Tính Liêm Chính Phương Pháp Luận (Methodological Notes):**
 > - **Giới hạn quan sát (Right-Censoring):** Tỷ lệ mua lại 3.12% được tính trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018). Những khách hàng gia nhập vào tháng 08/2018 có ít thời gian để quay lại mua sắm hơn khách hàng gia nhập năm 2017.
@@ -51,9 +51,11 @@ Mô hình Dashboard được thiết kế theo tiêu chuẩn Business Intelligen
 
 ![Power BI Dashboard - Trang 1: Tổng Quan Điều Hành](powerbi/images/dashboard_page1_executive.png)
 
-* **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (91.9%), Điểm đánh giá trung bình (4.16 ★ trên đơn giao thành công / 4.10 ★ toàn sàn), Tỷ lệ khách hàng quay lại (3.12% toàn sàn / 3.00% đơn giao thành công).
+* **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (93.2%), Điểm đánh giá trung bình (4.16 ★ trên đơn giao thành công / 4.10 ★ toàn sàn), Tỷ lệ khách hàng quay lại (3.12% toàn sàn / 3.00% đơn giao thành công).
 
-> 💡 **Ghi chú về Chuẩn Mẫu số & Grain Mismatch:** Tỷ lệ giao đúng hạn toàn quốc đạt **91.89% (~91.9%)** (tương ứng tỷ lệ trễ **8.11%**) trên **96,470 đơn hàng giao thành công có đầy đủ ngày giao thực tế**. Có đúng 8 đơn hàng có trạng thái `delivered` nhưng thiếu ngày giao thực tế (`order_delivered_customer_date IS NULL`) đã được tách riêng để không tính nhầm thành giao đúng hạn. Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (92.10% đúng hạn). Dự án sử dụng chuẩn cấp độ Đơn hàng để phản ánh trung thực trải nghiệm của người mua.
+> 💡 **Ghi chú về Chuẩn Mẫu số & Grain Mismatch:** Tỷ lệ giao đúng hạn toàn quốc đạt **93.23% (~93.2%)** (tương ứng tỷ lệ trễ **6.77%**, 6.534 đơn trễ) trên **96.470 đơn hàng giao thành công có đầy đủ ngày giao thực tế**. Có đúng 8 đơn hàng có trạng thái `delivered` nhưng thiếu ngày giao thực tế (`order_delivered_customer_date IS NULL`) đã được tách riêng để không tính nhầm thành giao đúng hạn. Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110.189 dòng)**, tỷ lệ trễ là **6.59%** (93.41% đúng hạn). Dự án sử dụng chuẩn cấp độ Đơn hàng để phản ánh trung thực trải nghiệm của người mua.
+>
+> **Lưu ý kỹ thuật:** Cột `order_estimated_delivery_date` trong dữ liệu gốc có thời gian luôn là `00:00:00` (midnight). Pipeline sử dụng `dt.normalize()` để so sánh ngày giao thực tế và ngày dự kiến ở cấp ngày (day-level), tránh phân loại sai các đơn giao đúng ngày hẹn nhưng sau 00:00 thành "trễ".
 
 * **Xu hướng Thời gian (Trend Analysis):** Biểu đồ kết hợp cột và đường thể hiện diễn biến Doanh thu theo tháng so sánh với Tỷ lệ giao hàng trễ (Delay Rate %).
 * **Phân tích Vực thẳm kiên nhẫn (Delay Buckets vs Review):** Trực quan hóa điểm số đánh giá và tỷ lệ đơn 1 sao tương ứng với từng khoảng thời gian trễ (Đúng hẹn, 1–3 ngày, 4–7 ngày, > 7 ngày).
@@ -142,7 +144,7 @@ Bộ biểu đồ khoa học được sinh tự động bằng Seaborn/Matplotli
 | Hình 3: Ma Trận Phân Loại Rủi Ro Seller | Hình 5: Ảnh Hưởng Đến Tỷ Lệ Giữ Chân Khách Hàng |
 | :---: | :---: |
 | ![Seller Matrix](outputs/figures/fig3_seller_risk_matrix.png) | ![Customer Retention](outputs/figures/fig5_customer_retention_and_first_order_impact.png) |
-| *Xác định nhóm người bán doanh thu cao nhưng điểm đánh giá kém* | *Đơn đầu tiên bị trễ làm giảm 17.4% tỷ lệ khách hàng quay lại* |
+| *Xác định nhóm người bán doanh thu cao nhưng điểm đánh giá kém* | *Đơn đầu tiên bị trễ làm giảm 16.0% tỷ lệ khách hàng quay lại (p=0.031)* |
 
 ---
 
@@ -190,12 +192,46 @@ olist-ecommerce-data-analyst/
 
 ---
 
-## 🛠️ 7. Bộ Công Nghệ Ứng Dụng (Tech Stack)
+## 🚀 7. Hướng Dẫn Chạy Dự Án (Getting Started)
+
+### Bước 1: Tải Dữ Liệu Gốc từ Kaggle
+Dữ liệu gốc không được đưa vào repository (`.gitignore`). Bạn cần tải từ Kaggle:
+1. Truy cập [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
+2. Tải xuống và giải nén 9 file CSV vào thư mục `data/raw/`.
+
+### Bước 2: Cài Đặt Môi Trường
+```bash
+# Tạo môi trường ảo Python
+python -m venv .venv
+
+# Kích hoạt (Windows)
+.venv\Scripts\activate
+
+# Cài đặt thư viện
+pip install -r requirements.txt
+```
+
+### Bước 3: Chạy Pipeline Từ Đầu Đến Cuối
+```bash
+python src/00_audit_and_setup.py          # Kiểm toán môi trường & thư mục
+python src/01_data_understanding.py       # Trích xuất metadata & từ điển dữ liệu
+python src/02_data_quality_assessment.py  # Quét lỗi dữ liệu & tính toàn vẹn
+python src/03_data_cleaning.py            # Làm sạch & Feature Engineering
+python src/04_exploratory_data_analysis.py# Phân tích thống kê & Vẽ biểu đồ
+python src/05_build_star_schema.py        # Xây dựng Star Schema & nạp SQLite DB
+```
+
+> ⚠️ **Lưu ý:** Các script phải được chạy theo thứ tự vì đầu ra của mỗi bước là đầu vào của bước tiếp theo.
+
+---
+
+## 🛠️ 8. Bộ Công Nghệ Ứng Dụng (Tech Stack)
 
 * **Ngôn ngữ Lập trình & Phân tích:** `Python 3.10+` (Pandas, NumPy, Scipy)
 * **Trực quan hóa Dữ liệu (Visualization):** `Matplotlib`, `Seaborn` (Visual styling, 300 DPI export)
 * **Cơ sở dữ liệu & SQL:** `SQLite 3`, `PostgreSQL-compatible DDL` (CTEs, Subqueries, Window Functions, Ranking, Partitioning, B-Tree Indexes)
 * **Business Intelligence & Phân tích Nâng cao:** `Microsoft Power BI Desktop`, `DAX` (Iterators `AVERAGEX`, Context Transition, Filter Modifiers, Time Intelligence)
 * **Kiến trúc Dữ liệu:** `Ralph Kimball Dimensional Modeling` (Star Schema, Fact-Dimension Separation, Grain Management)
+* **Kiểm định Thống kê:** `Scipy.stats` (Chi-Square Test of Independence)
 * **Quản lý Mã nguồn:** `Git`, `GitHub`
 

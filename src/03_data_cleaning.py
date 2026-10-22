@@ -47,7 +47,7 @@ def clean_products_and_translations():
     # 1. Thêm 2 bản dịch còn thiếu đã cam kết trong Business Problem (Phase 1 & 3)
     missing_translations = pd.DataFrame([
         {'product_category_name': 'pc_gamer', 'product_category_name_english': 'pc_gamer'},
-        {'product_category_name': 'portateis_cozinha_e_preparadores_de_alimentos', 'product_category_name_english': 'small_appliances_food_preparers'}
+        {'product_category_name': 'portateis_cozinha_e_preparadores_de_alimentos', 'product_category_name_english': 'kitchen_and_food_processors'}
     ])
     df_trans_complete = pd.concat([df_trans, missing_translations], ignore_index=True).drop_duplicates(subset=['product_category_name'])
 
@@ -58,8 +58,14 @@ def clean_products_and_translations():
     df_prods_clean['product_category_name'] = df_prods_clean['product_category_name'].fillna('unknown')
     df_prods_clean['product_category_name_english'] = df_prods_clean['product_category_name_english'].fillna('unknown')
 
-    # Chuẩn hóa tên category tiếng Anh (thay '_' bằng khoảng trắng, viết hoa đầu từ)
+    # Chuẩn hóa tên category tiếng Anh (thay '_' bằng khoảng trắng, viết hoa chuẩn)
     df_prods_clean['product_category_formatted'] = df_prods_clean['product_category_name_english'].str.replace('_', ' ').str.title()
+    title_replacements = {
+        'Pc Gamer': 'PC Gamer',
+        'Cds Dvds Musicals': 'CDs / DVDs / Musicals',
+        'Kitchen And Food Processors': 'Kitchen & Food Processors'
+    }
+    df_prods_clean['product_category_formatted'] = df_prods_clean['product_category_formatted'].replace(title_replacements)
 
     # 4. Xử lý các giá trị null về kích thước/trọng lượng (điền bằng median)
     num_cols = ['product_weight_g', 'product_length_cm', 'product_height_cm', 'product_width_cm', 'product_photos_qty']
@@ -278,10 +284,13 @@ def clean_orders_and_engineer_features():
         (df_orders['order_estimated_delivery_date'] - df_orders['order_purchase_timestamp']).dt.total_seconds() / 86400.0
     ).round(2)
 
-    # Số ngày chênh lệch giao hàng (dương = trễ, âm = sớm hơn dự kiến)
-    df_orders['delivery_delay_days'] = (
-        (df_orders['order_delivered_customer_date'] - df_orders['order_estimated_delivery_date']).dt.total_seconds() / 86400.0
-    ).round(2)
+    # Số ngày chênh lệch giao hàng chuẩn hóa cấp ngày lịch (Calendar Day Normalization)
+    # Trong raw data Olist, order_estimated_delivery_date luôn có time = 00:00:00.
+    # Sử dụng dt.normalize() để đưa về cấp ngày theo chuẩn nghiệp vụ logistics:
+    # Giao trong ngày dự kiến được tính đúng hạn (delay = 0).
+    d_deliv = df_orders['order_delivered_customer_date'].dt.normalize()
+    d_est = df_orders['order_estimated_delivery_date'].dt.normalize()
+    df_orders['delivery_delay_days'] = (d_deliv - d_est).dt.days
 
     # Thời gian seller chuẩn bị hàng giao cho bên vận chuyển (ngày)
     df_orders['seller_dispatch_days'] = (
