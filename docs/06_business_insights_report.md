@@ -46,15 +46,17 @@ Phân tích trên **96,478 đơn hàng đã giao thành công** và **96,096 kh�
 | **Piauí (PI)** | 476 | **15.97%** | 19.5 ngày | 3.99 ★ |
 | **Ceará (CE)** | 1,279 | **15.32%** | 21.3 ngày | 3.94 ★ |
 | **Sergipe (SE)** | 335 | **15.22%** | 21.5 ngày | 3.91 ★ |
-| *Toàn quốc (Benchmark)* | *96,478* | *7.90%* | *12.5 ngày* | *4.16 ★* |
+| *Toàn quốc (Benchmark)* | *96,478* | *8.11%* | *12.5 ngày* | *4.16 ★* |
 | **São Paulo (SP)** | 40,501 | **5.89%** | 8.8 ngày | 4.25 ★ |
 | **Paraná (PR)** | 4,923 | **5.00%** | 12.0 ngày | 4.24 ★ |
+
+> 💡 **Lưu ý về Grain (Độ chi tiết dữ liệu):** Tỷ lệ giao trễ toàn quốc ở cấp độ **Đơn hàng (Order-level)** là **8.11%** (7,820 / 96,478 đơn). Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (8,707 / 110,197) do các đơn hàng giỏ lớn (nhiều items) có tỷ lệ trễ thấp hơn. Để phản ánh đúng trải nghiệm của khách hàng, toàn bộ báo cáo và Power BI thống nhất sử dụng chuẩn cấp độ Đơn hàng (8.11% trễ, tương ứng **91.89% đúng hạn**).
 
 ![Fig 2: State Delivery Performance](../outputs/figures/fig2_state_delivery_performance.png)
 
 * **Insight then chốt:** Các bang Đông Bắc (AL, MA, PI, CE, SE) có tỷ lệ giao trễ trên 15% (cứ 5 đơn thì có 1 đơn trễ). Nguyên nhân chính là do **90% người bán tập trung ở vùng Đông Nam (SP, RJ, MG, PR)** trong khi hạ tầng giao thông liên bang kết nối đến Đông Bắc còn nhiều hạn chế.
 * **Hành động đề xuất:** 
-  1. Cân nhắc điều chỉnh lại thuật toán dự báo ngày giao (`order_estimated_delivery_date`) cho khu vực Đông Bắc cộng thêm 3-5 ngày đệm (Buffer Days) để quản trị kỳ vọng khách hàng.
+  1. Thử nghiệm A/B Testing điều chỉnh thuật toán dự báo ngày giao (`order_estimated_delivery_date`) cho khu vực Đông Bắc cộng thêm 3-5 ngày đệm (Buffer Days) để quản trị kỳ vọng khách hàng.
   2. Khuyến khích hoặc chiêu mộ thêm các Seller đặt kho hàng (Fulfillment Hub) tại khu vực Đông Bắc.
 
 ---
@@ -65,12 +67,12 @@ Bằng cách phân loại người bán dựa trên **Tổng Doanh thu (Trục X
 
 ![Fig 3: Seller Risk Matrix](../outputs/figures/fig3_seller_risk_matrix.png)
 
-* **Phát hiện 21 High-Risk Sellers:**
+* **Phát hiện 21 High-Risk Sellers (Item-Weighted) / 16 Sellers (Order-Deduplicated):**
   - Seller tiêu biểu `712e6ed8aa4aa1fa65dab41fed5737e4`: Tạo ra hơn 50,000 R$ doanh thu nhưng **tỷ lệ trễ hẹn lên tới 21.18%** và điểm đánh giá chỉ đạt **3.65 ★**.
   - Seller `2eb70248d66e0e3ef83659f71b244378`: Tỷ lệ trễ 14.21%, điểm đánh giá 3.63 ★.
-* **Hành động đề xuất:**
-  1. Áp dụng chính sách **SLA Dispatching**: Buộc các seller nhóm này phải bàn giao hàng cho carrier trong vòng 48h (`seller_dispatch_days <= 2`).
-  2. Nếu không cải thiện trong 30 ngày, tạm thời giảm độ hiển thị (Deprioritize in search/ranking) trên sàn.
+* **Hành động đề xuất (Chương trình Pilot):**
+  1. Thử nghiệm áp dụng chính sách **SLA Dispatching**: Yêu cầu nhóm seller này bàn giao hàng cho carrier trong vòng 48h (`seller_dispatch_days <= 2`).
+  2. Nếu không cải thiện trong 30 ngày thử nghiệm, tạm thời giảm độ hiển thị (Deprioritize in search/ranking) trên sàn.
 
 ---
 
@@ -101,17 +103,33 @@ Bằng cách phân loại người bán dựa trên **Tổng Doanh thu (Trục X
 
 ---
 
-## 🚀 4 Đề xuất Chiến lược cho Ban Giám đốc Olist (Actionable Plan)
+## 🚀 4 Giả thuyết Chiến lược Đề xuất Kiểm chứng (Actionable Hypotheses for Testing)
 
-1. **Triển khai "Early Warning & Compensation Bot" (Chống trễ trên 3 ngày):**
-   - Tập trung mọi nỗ lực vận hành để không để đơn hàng vượt qua mốc **3 ngày trễ** (nơi điểm số lao dốc từ 3.76 ★ xuống 2.32 ★).
-   - Tự động phát voucher 10% ngay ngày trễ thứ 2.
-2. **Cơ chế kiểm soát 21 Top-Revenue High-Risk Sellers:**
-   - Đặt KPI thời gian chuẩn bị hàng (`seller_dispatch_days` <= 2 ngày). Phạt phí dịch vụ hoặc giảm traffic hiển thị nếu tái phạm.
-3. **Hiệu chỉnh thời gian dự kiến (Dynamic Estimated Delivery Date) theo Vùng:**
-   - Tăng thời gian ước tính cho các đơn hàng đi các bang Đông Bắc (AL, MA, PI, CE) thêm 3-4 ngày để giảm tỷ lệ "bị coi là trễ", giúp giảm tỷ lệ đánh giá 1 sao.
-4. **Chương trình "First Order VIP Protection":**
-   - Đơn hàng của khách mới phải được kiểm tra tracking chủ động mỗi ngày. Nếu phát sinh trục trặc, CSKH chủ động liên hệ trước khi khách hàng phàn nàn.
+Thay vì áp dụng ngay trên diện rộng, các đề xuất sau cần được triển khai dưới dạng **A/B Testing hoặc Thử nghiệm có đối chứng (Pilot Program)**:
+
+1. **Giả thuyết 1: "Early Compensation Voucher Bot" (Chống trễ trên 3 ngày)**
+   * *Giả thuyết:* Khi đơn hàng chạm mốc trễ ngày thứ 2, việc chủ động gửi thông báo xin lỗi kèm mã giảm giá 10% cho đơn tiếp theo sẽ ngăn chặn điểm đánh giá sụt giảm sâu xuống dưới 2.0 ★ và giảm tỷ lệ đánh giá 1 sao.
+   * *Cách kiểm chứng:* Chia 50/50 nhóm khách hàng có đơn trễ ngày thứ 2 để đo lường Review Score và Chi phí đền bù (Voucher Cost vs LTV).
+2. **Giả thuyết 2: "Buffer Days" cho Khu vực Đông Bắc**
+   * *Giả thuyết:* Tăng thời gian ước tính (`estimated_delivery_days`) thêm 3–4 ngày cho các bang AL, MA, PI, CE sẽ kéo giảm tỷ lệ "bị tính là trễ" trên hệ thống, từ đó giảm áp lực tâm lý của người mua và cải thiện điểm hài lòng trung bình thêm ít nhất 0.2 ★.
+3. **Giả thuyết 3: "SLA Dispatching" cho Nhóm Seller Rủi ro Cao**
+   * *Giả thuyết:* Buộc 21 sellers rủi ro cao cam kết thời gian gửi hàng $\le 48h$ sẽ giảm tỷ lệ trễ chung của nhóm này từ 21.2% xuống dưới 10%.
+4. **Giả thuyết 4: "First-Order VIP Route"**
+   * *Giả thuyết:* Ưu tiên xử lý đơn hàng đầu tiên của khách hàng mới sẽ bảo vệ tỷ lệ Retention không bị sụt giảm 18.7%.
+
+---
+
+## 🔍 5. Giới Hạn Phân Tích & Phân Biệt Tương Quan vs Nhân Quả (Methodological Limitations)
+
+Để duy trì tính liêm chính học thuật và độ tin cậy trong môi trường doanh nghiệp thực tế, người phân tích cần lưu ý các giới hạn sau:
+
+1. **Tương quan (Correlation) vs Nhân quả (Causation):**
+   * Dữ liệu quan sát (Observational Data) cho thấy sự sụt giảm mạnh về điểm review khi thời gian trễ tăng. Tuy nhiên, thời gian giao trễ **chưa chắc là nguyên nhân duy nhất (causality)**. Có thể tồn tại các biến ngoại lai (Confounders): ví dụ sản phẩm bị đóng gói sơ sài dẫn đến vừa giao chậm, vừa bị móp méo/vỡ trên đường đi, khiến khách hàng đánh giá 1 sao vì cả hai lý do.
+2. **Thiên lệch Cửa sổ Quan sát trong Phân tích Retention (Right-Censoring Bias):**
+   * Tỷ lệ mua lại 3.12% (2,997 / 96,096 khách hàng) là con số đo lường trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018).
+   * Khách hàng có đơn hàng đầu tiên vào tháng 08/2018 chỉ có khoảng 1–3 tuần để phát sinh đơn mua lại trước khi tập dữ liệu kết thúc, trong khi khách hàng mua vào tháng 01/2017 có tới 18 tháng để quay lại. Do đó, con số 3.12% bị ảnh hưởng bởi hiện tượng **Right-Censoring**. Trong môi trường sản xuất thực tế, chỉ số này nên được chuẩn hóa theo cửa sổ thời gian cố định (Fixed Observation Windows) như **60-day Retention Rate** hoặc **90-day Retention Rate**.
+3. **Định nghĩa Đơn hàng Mua lại (Repeat Orders):**
+   * Phân tích hiện tại ghi nhận khách hàng có $\ge 2$ đơn hàng trong hệ thống (đo lường hành vi phát sinh đơn tiếp theo - Re-order intent). Cần lưu ý nếu đơn hàng thứ hai bị hủy hoặc hoàn trả, hành vi này vẫn được tính là đã có ý định mua lại.
 
 ---
 *Báo cáo được tổng hợp dựa trên kết quả tính toán định lượng chính xác từ mã nguồn [src/04_exploratory_data_analysis.py](../src/04_exploratory_data_analysis.py).*

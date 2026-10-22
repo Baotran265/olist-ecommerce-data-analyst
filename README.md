@@ -36,6 +36,10 @@ Dựa trên việc làm sạch và phân tích **96.478 đơn hàng đã giao th
 5. **Hiệu ứng đòn bẩy từ trải nghiệm đơn hàng đầu tiên (First-Order Leverage):**
    * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng **giảm 18.7%** (từ 3.13% xuống chỉ còn 2.54%) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
 
+> 📌 **Tính Liêm Chính Phương Pháp Luận (Methodological Notes):**
+> - **Giới hạn quan sát (Right-Censoring):** Tỷ lệ mua lại 3.12% được tính trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018). Những khách hàng gia nhập vào tháng 08/2018 có ít thời gian để quay lại mua sắm hơn khách hàng gia nhập năm 2017.
+> - **Tương quan (Correlation) vs Nhân quả (Causation):** Dữ liệu chứng minh sự liên hệ mạnh mẽ giữa giao trễ và điểm đánh giá thấp, tuy nhiên các yếu tố như chất lượng hàng hóa hay hư hại vận chuyển cũng có thể đóng vai trò biến ngoại lai (Confounders). Các đề xuất can thiệp vận hành được định vị là **Giả thuyết kinh doanh cần kiểm chứng qua A/B Testing / Pilot Program**.
+
 ---
 
 ## 🖥️ 3. Báo Cáo Trực Quan Tương Tác Power BI (3-Page Dashboard)
@@ -47,7 +51,10 @@ Mô hình Dashboard được thiết kế theo tiêu chuẩn Business Intelligen
 
 ![Power BI Dashboard - Trang 1: Tổng Quan Điều Hành](powerbi/images/dashboard_page1_executive.png)
 
-* **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (92.2%), Điểm đánh giá trung bình (4.13 ★), Tỷ lệ khách hàng quay lại (3.12%).
+* **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (91.9%), Điểm đánh giá trung bình (4.13 ★), Tỷ lệ khách hàng quay lại (3.12%).
+
+> 💡 **Ghi chú về Grain Mismatch:** Tỷ lệ giao trễ toàn quốc ở cấp độ **Đơn hàng (Order-level)** là **8.11%** (tương ứng **91.89% đúng hạn** trên 96,478 đơn hàng đã giao). Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (92.10% đúng hạn). Dự án sử dụng chuẩn cấp độ Đơn hàng để phản ánh trung thực trải nghiệm của khách hàng.
+
 * **Xu hướng Thời gian (Trend Analysis):** Biểu đồ kết hợp cột và đường thể hiện diễn biến Doanh thu theo tháng so sánh với Tỷ lệ giao hàng trễ (Delay Rate %).
 * **Phân tích Vực thẳm kiên nhẫn (Delay Buckets vs Review):** Trực quan hóa điểm số đánh giá và tỷ lệ đơn 1 sao tương ứng với từng khoảng thời gian trễ (Đúng hẹn, 1–3 ngày, 4–7 ngày, > 7 ngày).
 

@@ -41,19 +41,30 @@ ORDER BY
 -- --------------------------------------------------------------------
 -- QUERY 2: GEOGRAPHIC BOTTLENECKS (Top Delayed States & Regional Delay Rates)
 -- Business Goal: Identify states with highest delay rates (min 100 orders).
+-- Grain-Safe: Deduplicate to order level first to prevent multi-item orders from skewing averages.
 -- --------------------------------------------------------------------
-WITH state_summary AS (
+WITH order_level_state AS (
+    -- Deduplicate to order level per customer state
     SELECT 
+        f.order_id,
         c.customer_state,
-        COUNT(DISTINCT f.order_id) AS total_orders,
-        SUM(DISTINCT CASE WHEN f.is_delayed = 1 THEN f.order_id ELSE NULL END) AS delayed_orders_check, -- count distinct delayed
-        COUNT(DISTINCT CASE WHEN f.is_delayed = 1 THEN f.order_id END) AS delayed_orders,
-        ROUND(AVG(f.actual_delivery_days), 1) AS avg_delivery_days,
-        ROUND(AVG(f.review_score), 2) AS avg_review_score
+        f.is_delayed,
+        f.actual_delivery_days,
+        f.review_score
     FROM fact_order_items f
     JOIN dim_customers c ON f.customer_id = c.customer_id
     WHERE f.order_status = 'delivered'
-    GROUP BY c.customer_state
+    GROUP BY f.order_id, c.customer_state, f.is_delayed, f.actual_delivery_days, f.review_score
+),
+state_summary AS (
+    SELECT 
+        customer_state,
+        COUNT(order_id) AS total_orders,
+        SUM(CASE WHEN is_delayed = 1 THEN 1 ELSE 0 END) AS delayed_orders,
+        ROUND(AVG(actual_delivery_days), 1) AS avg_delivery_days,
+        ROUND(AVG(review_score), 2) AS avg_review_score
+    FROM order_level_state
+    GROUP BY customer_state
 )
 SELECT 
     customer_state,
@@ -131,6 +142,12 @@ LIMIT 15;
 -- --------------------------------------------------------------------
 -- QUERY 5: CUSTOMER RETENTION & FIRST ORDER EXPERIENCE
 -- Business Goal: Quantify the drop in repeat purchase rate caused by a delayed first order.
+-- Methodological Note:
+-- 1. Repeat Buyer is defined as a customer with >= 2 distinct lifetime orders.
+-- 2. First order must be 'delivered' to establish whether it arrived on-time or delayed.
+-- 3. Limitation (Right-Censoring): Olist dataset spans 2016-2018. Customers acquired
+--    near the end of the window (e.g., Aug 2018) had less opportunity to repeat purchase
+--    than customers acquired in 2017.
 -- --------------------------------------------------------------------
 WITH customer_orders AS (
     -- Group by customer_unique_id and order_id to get 1 row per unique order
