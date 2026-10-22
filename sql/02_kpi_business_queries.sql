@@ -15,10 +15,11 @@ WITH order_level AS (
         delay_bucket,
         review_score,
         is_delayed
-    FROM fact_order_items
-    WHERE order_status = 'delivered'
-      AND review_score IS NOT NULL
-    GROUP BY order_id, delay_bucket, review_score, is_delayed
+    FROM fact_order_items f
+    WHERE f.order_status = 'delivered'
+      AND f.is_valid_delivered = 1
+      AND f.review_score IS NOT NULL
+    GROUP BY f.order_id, f.delay_bucket, f.review_score, f.is_delayed
 )
 SELECT 
     delay_bucket,
@@ -99,6 +100,7 @@ WITH seller_orders AS (
         AVG(f.seller_dispatch_days) AS avg_dispatch_days
     FROM fact_order_items f
     WHERE f.order_status = 'delivered'
+      AND f.is_valid_delivered = 1
     GROUP BY f.seller_id, f.order_id
 ),
 seller_summary AS (

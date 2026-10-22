@@ -51,7 +51,7 @@ Mô hình Dashboard được thiết kế theo tiêu chuẩn Business Intelligen
 
 ![Power BI Dashboard - Trang 1: Tổng Quan Điều Hành](powerbi/images/dashboard_page1_executive.png)
 
-* **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (91.9%), Điểm đánh giá trung bình (4.13 ★), Tỷ lệ khách hàng quay lại (3.12%).
+* **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (91.9%), Điểm đánh giá trung bình (4.16 ★ trên đơn giao thành công / 4.10 ★ toàn sàn), Tỷ lệ khách hàng quay lại (3.12% toàn sàn / 3.00% đơn giao thành công).
 
 > 💡 **Ghi chú về Chuẩn Mẫu số & Grain Mismatch:** Tỷ lệ giao đúng hạn toàn quốc đạt **91.89% (~91.9%)** (tương ứng tỷ lệ trễ **8.11%**) trên **96,470 đơn hàng giao thành công có đầy đủ ngày giao thực tế**. Có đúng 8 đơn hàng có trạng thái `delivered` nhưng thiếu ngày giao thực tế (`order_delivered_customer_date IS NULL`) đã được tách riêng để không tính nhầm thành giao đúng hạn. Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (92.10% đúng hạn). Dự án sử dụng chuẩn cấp độ Đơn hàng để phản ánh trung thực trải nghiệm của người mua.
 
@@ -142,7 +142,7 @@ Bộ biểu đồ khoa học được sinh tự động bằng Seaborn/Matplotli
 | Hình 3: Ma Trận Phân Loại Rủi Ro Seller | Hình 5: Ảnh Hưởng Đến Tỷ Lệ Giữ Chân Khách Hàng |
 | :---: | :---: |
 | ![Seller Matrix](outputs/figures/fig3_seller_risk_matrix.png) | ![Customer Retention](outputs/figures/fig5_customer_retention_and_first_order_impact.png) |
-| *Xác định nhóm người bán doanh thu cao nhưng điểm đánh giá kém* | *Đơn đầu tiên bị trễ làm giảm 18.7% tỷ lệ khách hàng quay lại* |
+| *Xác định nhóm người bán doanh thu cao nhưng điểm đánh giá kém* | *Đơn đầu tiên bị trễ làm giảm 17.4% tỷ lệ khách hàng quay lại* |
 
 ---
 

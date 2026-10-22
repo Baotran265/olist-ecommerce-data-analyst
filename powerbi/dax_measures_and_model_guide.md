@@ -59,8 +59,12 @@ SUM(fact_order_items[freight_value])
 Gross Order Value = 
 SUM(fact_order_items[item_total_value])
 
--- 6. Tỷ trọng Phí ship trên Tổng giá trị (% Freight Ratio)
+-- 6. Tỷ trọng Phí ship trên Doanh thu hàng hóa (% Freight of GMV)
 Freight % of GMV = 
+DIVIDE([Total Freight], [Total Revenue], 0)
+
+-- 6b. Tỷ trọng Phí ship trên Tổng giá trị đơn hàng gồm cước (% Freight of Gross Order Value)
+Freight Ratio % = 
 DIVIDE([Total Freight], [Gross Order Value], 0)
 
 -- 7. Giá trị đơn hàng trung bình (Average Order Value - AOV)
@@ -128,10 +132,21 @@ CALCULATE(
 ### Nhóm 3: Customer Satisfaction & Review Metrics (Đánh giá Khách hàng)
 
 ```dax
--- 15. Điểm đánh giá trung bình (Average Review Score)
---     ⚠️ Phải deduplicate về order-level vì review_score là order-grain
---     (Xem docs/07_data_modeling_and_star_schema.md §3.6 - Grain Mismatch)
+-- 15. Điểm đánh giá trung bình (Average Review Score - Delivered Orders, Grain-Safe)
+--     ⚠️ Phải deduplicate về order-level vì review_score là order-grain.
+--     Đồng thời lọc đơn giao thành công hợp lệ để đồng bộ với Python & Benchmark (4.16 ★).
 Avg Review Score = 
+CALCULATE(
+    AVERAGEX(
+        SUMMARIZE(fact_order_items, fact_order_items[order_id], fact_order_items[review_score]),
+        fact_order_items[review_score]
+    ),
+    fact_order_items[order_status] = "delivered",
+    fact_order_items[is_valid_delivered] = 1
+)
+
+-- 15a. Điểm đánh giá trung bình toàn sàn (Tất cả trạng thái đơn hàng có review: 4.10 ★)
+Avg Review Score (All Orders) = 
 AVERAGEX(
     SUMMARIZE(fact_order_items, fact_order_items[order_id], fact_order_items[review_score]),
     fact_order_items[review_score]
@@ -184,12 +199,13 @@ IF(
 )
 
 -- 21. Số lượng Seller rủi ro cao (Dùng cho KPI Card tổng quát)
+--     Được bọc điều kiện đơn giao thành công hợp lệ để đồng bộ 100% với Python & SQL (ra đúng 16 sellers)
 High Risk Sellers Count = 
 COUNTROWS(
     FILTER(
         ADDCOLUMNS(
             VALUES(fact_order_items[seller_id]),
-            "Rev", [Total Revenue],
+            "Rev", CALCULATE([Total Revenue], fact_order_items[order_status] = "delivered", fact_order_items[is_valid_delivered] = 1),
             "Review", [Avg Review Score]
         ),
         [Rev] >= 15000 && [Review] < 3.8
