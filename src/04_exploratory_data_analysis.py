@@ -57,14 +57,19 @@ def analyze_delivery_delay_vs_satisfaction(df):
     print("--- [Question 1] Delivery Delay vs Review Score ---")
     deliv = df[df['order_status'] == 'delivered'].drop_duplicates(subset=['order_id']).copy()
 
-    # Thống kê theo delay bucket
+    # Lọc bỏ 8 đơn delivered bị thiếu ngày giao hàng thực tế (delay_bucket = 'Not Delivered')
+    # Mẫu số đơn hàng có ngày giao hợp lệ là 96,470 đơn
     bucket_order = ['On Time / Early', '1-3 Days Late', '4-7 Days Late', '> 7 Days Late']
-    bucket_stats = deliv.groupby('delay_bucket').agg(
+    deliv_valid = deliv[deliv['delay_bucket'].isin(bucket_order)].copy()
+
+    # Thống kê theo delay bucket (mẫu số % review tính trên các đơn có review hợp lệ, tương ứng SQL Query 1)
+    bucket_stats = deliv_valid.groupby('delay_bucket').agg(
         order_count=('order_id', 'count'),
+        valid_reviews_count=('review_score', lambda s: s.notna().sum()),
         mean_review=('review_score', 'mean'),
         median_review=('review_score', 'median'),
-        pct_1_star=('review_score', lambda s: (s == 1).mean() * 100),
-        pct_5_star=('review_score', lambda s: (s == 5).mean() * 100)
+        pct_1_star=('review_score', lambda s: (s == 1).sum() / s.notna().sum() * 100),
+        pct_5_star=('review_score', lambda s: (s == 5).sum() / s.notna().sum() * 100)
     ).reindex(bucket_order).reset_index()
 
     print(bucket_stats)
@@ -79,7 +84,7 @@ def analyze_delivery_delay_vs_satisfaction(df):
     ax1.set_title('Average Review Score by Delivery Delay Bucket\n(The "Tolerance Cliff" after 3 days)', fontsize=13, fontweight='bold', pad=15)
     ax1.set_ylabel('Mean Review Score (1 to 5 Stars)', fontsize=11)
     ax1.set_ylim(0, 5)
-    ax1.axhline(deliv['review_score'].mean(), color=NEUTRAL_GRAY, linestyle='--', label=f"Overall Mean: {deliv['review_score'].mean():.2f} / 5")
+    ax1.axhline(deliv_valid['review_score'].mean(), color=NEUTRAL_GRAY, linestyle='--', label=f"Overall Mean: {deliv_valid['review_score'].mean():.2f} / 5")
 
     for bar in bars:
         h = bar.get_height()
@@ -111,6 +116,20 @@ def analyze_geographic_bottlenecks(df):
     print("--- [Question 2] Geographic Bottlenecks & Interstate Delivery ---")
     deliv = df[df['order_status'] == 'delivered'].drop_duplicates(subset=['order_id']).copy()
 
+    # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate)
+    interstate_stats = deliv.groupby('is_interstate').agg(
+        total_orders=('order_id', 'count'),
+        avg_actual_days=('actual_delivery_days', 'mean'),
+        avg_freight_value=('freight_value', 'mean'),
+        delay_rate=('is_delayed', lambda s: s.mean() * 100),
+        avg_review=('review_score', 'mean')
+    ).reset_index()
+    interstate_stats['route_type'] = interstate_stats['is_interstate'].map({0: 'Intrastate (Nội bang)', 1: 'Interstate (Liên bang)'})
+    interstate_stats.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q2_interstate_vs_intrastate.csv'), index=False)
+    print("Interstate vs Intrastate Benchmark:")
+    print(interstate_stats)
+
+    # 2. Thống kê theo Bang (State Delivery Performance)
     state_stats = deliv.groupby('customer_state').agg(
         total_orders=('order_id', 'count'),
         delayed_orders=('is_delayed', 'sum'),
@@ -161,12 +180,22 @@ def analyze_seller_risk_matrix(df):
     print("--- [Question 3] Seller Risk Matrix (High Revenue - Low Satisfaction) ---")
     deliv = df[df['order_status'] == 'delivered'].copy()
 
-    seller_stats = deliv.groupby('seller_id').agg(
-        total_revenue=('price', 'sum'),
-        items_sold=('order_item_id', 'count'),
-        orders_count=('order_id', 'nunique'),
+    # Grain-Safe: Deduplicate về cấp seller-order để phản ánh đúng trải nghiệm của từng đơn hàng
+    seller_orders = deliv.groupby(['seller_id', 'order_id']).agg(
+        order_rev=('price', 'sum'),
+        items_count=('order_item_id', 'count'),
+        review_score=('review_score', 'mean'),
+        is_delayed=('is_delayed', 'max'),
+        seller_dispatch_days=('seller_dispatch_days', 'mean')
+    ).reset_index()
+
+    seller_stats = seller_orders.groupby('seller_id').agg(
+        total_revenue=('order_rev', 'sum'),
+        items_sold=('items_count', 'sum'),
+        orders_count=('order_id', 'count'),
         avg_review=('review_score', 'mean'),
-        delay_rate=('is_delayed', lambda s: s.mean() * 100)
+        delay_rate=('is_delayed', lambda s: s.mean() * 100),
+        avg_dispatch_days=('seller_dispatch_days', 'mean')
     ).reset_index()
 
     # Định nghĩa ngưỡng High Revenue (>= 15,000 R$) và Low Review (< 3.8)
@@ -179,7 +208,7 @@ def analyze_seller_risk_matrix(df):
 
     high_risk_sellers = seller_stats[seller_stats['quadrant'] == 'High Risk (Intervene)'].sort_values(by='total_revenue', ascending=False)
     high_risk_sellers.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q3_high_risk_sellers.csv'), index=False)
-    print(f"Identified {len(high_risk_sellers)} High Risk sellers.")
+    print(f"Identified {len(high_risk_sellers)} High Risk sellers (Order-deduplicated standard).")
 
     fig, ax = plt.subplots(figsize=(12, 7))
 
@@ -277,22 +306,30 @@ def analyze_customer_retention(df):
 
     merged = orders_df.merge(cust_df[['customer_id', 'customer_unique_id']], on='customer_id')
 
-    # Phân loại khách hàng mua 1 lần vs khách hàng quay lại (Repeat Buyers)
-    order_counts = merged.groupby('customer_unique_id')['order_id'].nunique()
-    total_cust = len(order_counts)
-    repeat_cust_ids = set(order_counts[order_counts > 1].index)
-    repeat_count = len(repeat_cust_ids)
-    repeat_pct = (repeat_count / total_cust) * 100
+    # 1. Định nghĩa 1: Repeat Orders Placed (Tất cả trạng thái đơn hàng)
+    all_order_counts = merged.groupby('customer_unique_id')['order_id'].nunique()
+    total_cust_all = len(all_order_counts)
+    repeat_all_ids = set(all_order_counts[all_order_counts > 1].index)
+    repeat_all_count = len(repeat_all_ids)
+    repeat_all_pct = (repeat_all_count / total_cust_all) * 100
 
-    print(f"Total Unique Customers: {total_cust:,}")
-    print(f"Repeat Customers: {repeat_count:,} ({repeat_pct:.2f}%)")
+    # 2. Định nghĩa 2: Repeat Completed Purchases (Chỉ tính đơn giao thành công - 'delivered')
+    deliv_orders = merged[merged['order_status'] == 'delivered'].copy()
+    deliv_order_counts = deliv_orders.groupby('customer_unique_id')['order_id'].nunique()
+    total_cust_deliv = len(deliv_order_counts)
+    repeat_deliv_ids = set(deliv_order_counts[deliv_order_counts > 1].index)
+    repeat_deliv_count = len(repeat_deliv_ids)
+    repeat_deliv_pct = (repeat_deliv_count / total_cust_deliv) * 100
 
-    # Xác định đơn hàng đầu tiên (First Order) của từng khách hàng
+    print(f"Total Unique Customers (All Statuses): {total_cust_all:,} | Repeat Orders Placed: {repeat_all_count:,} ({repeat_all_pct:.2f}%)")
+    print(f"Total Unique Customers (Delivered Only): {total_cust_deliv:,} | Repeat Completed Purchases: {repeat_deliv_count:,} ({repeat_deliv_pct:.2f}%)")
+
+    # Xác định đơn hàng đầu tiên (First Order) của từng khách hàng theo timestamp mua hàng
     sorted_orders = merged.sort_values(by=['customer_unique_id', 'order_purchase_timestamp'])
     first_orders = sorted_orders.drop_duplicates(subset=['customer_unique_id'], keep='first').copy()
-    first_orders['is_repeat_customer'] = first_orders['customer_unique_id'].isin(repeat_cust_ids).astype(int)
+    first_orders['is_repeat_customer'] = first_orders['customer_unique_id'].isin(repeat_all_ids).astype(int)
 
-    # Đánh giá tác động của giao hàng trễ ở đơn đầu tiên
+    # Đánh giá tác động của giao hàng trễ ở đơn đầu tiên (trên tập đơn đầu delivered)
     deliv_first = first_orders[first_orders['order_status'] == 'delivered'].copy()
     retention_by_delay = deliv_first.groupby('is_delayed').agg(
         customer_count=('customer_unique_id', 'count'),
@@ -306,7 +343,9 @@ def analyze_customer_retention(df):
     # Trực quan hóa
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
-    # Subplot 1: Donut chart tỷ lệ khách hàng quay lại
+    # Subplot 1: Donut chart tỷ lệ khách hàng quay lại (Delivered-Only definition)
+    total_cust = total_cust_deliv
+    repeat_count = repeat_deliv_count
     sizes = [total_cust - repeat_count, repeat_count]
     labels = [f"One-Time Buyers\n({sizes[0]:,} - {sizes[0]/total_cust*100:.1f}%)",
               f"Repeat Buyers\n({sizes[1]:,} - {sizes[1]/total_cust*100:.1f}%)"]

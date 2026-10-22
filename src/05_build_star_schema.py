@@ -136,6 +136,9 @@ def build_fact_order_items():
         'is_interstate'
     ]].copy()
 
+    # has_comment là cờ nhị phân (1/0), nếu đơn không có review thì gán 0
+    fact['has_comment'] = fact['has_comment'].fillna(0).astype(int)
+
     out_fact = os.path.join(STAR_SCHEMA_DIR, 'fact_order_items.csv')
     fact.to_csv(out_fact, index=False)
     print(f"  -> Saved fact_order_items to: {out_fact} ({len(fact):,} rows, {len(fact.columns)} columns)")
@@ -147,26 +150,30 @@ def build_fact_order_items():
 # ==========================================
 
 def load_into_sqlite(dim_date, dim_cust, dim_sellers, dim_products, fact_items):
-    print("--- [5/5] Loading Star Schema into SQLite Database for SQL Testing ---")
+    print("--- [5/5] Loading Star Schema into SQLite Database with Strict DDL Constraints ---")
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
 
     conn = sqlite3.connect(DB_PATH)
-
-    dim_date.to_sql('dim_date', conn, if_exists='replace', index=False)
-    dim_cust.to_sql('dim_customers', conn, if_exists='replace', index=False)
-    dim_sellers.to_sql('dim_sellers', conn, if_exists='replace', index=False)
-    dim_products.to_sql('dim_products', conn, if_exists='replace', index=False)
-    fact_items.to_sql('fact_order_items', conn, if_exists='replace', index=False)
-
-    # Tạo chỉ mục (Indexes) để tối ưu hiệu năng truy vấn SQL
     cursor = conn.cursor()
-    cursor.execute("CREATE INDEX idx_fact_order ON fact_order_items(order_id);")
-    cursor.execute("CREATE INDEX idx_fact_cust ON fact_order_items(customer_id);")
-    cursor.execute("CREATE INDEX idx_fact_seller ON fact_order_items(seller_id);")
-    cursor.execute("CREATE INDEX idx_fact_prod ON fact_order_items(product_id);")
-    cursor.execute("CREATE INDEX idx_fact_date ON fact_order_items(order_date_key);")
-    cursor.execute("CREATE INDEX idx_dim_date ON dim_date(date_key);")
+
+    # 1. Thực thi DDL Schema từ sql/01_create_star_schema.sql (Tạo bảng có Primary Key & Foreign Keys)
+    ddl_path = os.path.join(BASE_DIR, 'sql', '01_create_star_schema.sql')
+    with open(ddl_path, 'r', encoding='utf-8') as f:
+        ddl_sql = f.read()
+    cursor.executescript(ddl_sql)
+    print("  -> Applied DDL schema (Tables, Primary Keys, Foreign Keys, Indexes) from sql/01_create_star_schema.sql")
+
+    # 2. Nạp dữ liệu vào bảng (if_exists='append' để giữ nguyên DDL constraints)
+    dim_date.to_sql('dim_date', conn, if_exists='append', index=False)
+    dim_cust.to_sql('dim_customers', conn, if_exists='append', index=False)
+    dim_sellers.to_sql('dim_sellers', conn, if_exists='append', index=False)
+    dim_products.to_sql('dim_products', conn, if_exists='append', index=False)
+    fact_items.to_sql('fact_order_items', conn, if_exists='append', index=False)
+
+    # 3. Tạo bổ sung chỉ mục tối ưu truy vấn
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_fact_order ON fact_order_items(order_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_dim_date ON dim_date(date_key);")
     conn.commit()
 
     print(f"  -> Star Schema successfully loaded into SQLite: {DB_PATH}")

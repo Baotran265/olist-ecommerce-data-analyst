@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS fact_order_items (
     -- Customer Satisfaction Metrics
     review_score FLOAT,                       -- 1 to 5 stars
     satisfaction_tier VARCHAR(15),            -- 'Positive', 'Neutral', 'Negative'
-    has_comment INT NOT NULL,                 -- 1 if review has text message
+    has_comment INT NOT NULL DEFAULT 0,       -- 1 if review has text message, 0 otherwise
     is_interstate INT NOT NULL,               -- 1 if customer_state != seller_state
     
     -- Primary & Foreign Keys

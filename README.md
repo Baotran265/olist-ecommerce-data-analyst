@@ -25,14 +25,14 @@ Dựa trên việc làm sạch và phân tích **96.478 đơn hàng đã giao th
 
 1. **"Vực thẳm kiên nhẫn" (The Tolerance Cliff) tại ngày thứ 3:**
    * Khách hàng có xu hướng dễ tính với các đơn trễ nhẹ từ 1 – 3 ngày (điểm hài lòng trung bình đạt **3.76 ★** so với **4.29 ★** của đơn đúng hạn).
-   * Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự kiên nhẫn hoàn toàn sụp đổ:** điểm đánh giá rớt thẳng đứng xuống **2.32 ★** (trễ 4–7 ngày) và chạm đáy **1.73 ★** (trễ > 7 ngày). Có tới **67.6% khách hàng chấm 1 sao** khi đơn hàng trễ hơn 1 tuần.
+   * Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự kiên nhẫn hoàn toàn sụp đổ:** điểm đánh giá rớt thẳng đứng xuống **2.32 ★** (trễ 4–7 ngày) và chạm đáy **1.73 ★** (trễ > 7 ngày). Có tới **68.8% khách hàng chấm 1 sao** (tính trên tập đơn có đánh giá hợp lệ) khi đơn hàng trễ hơn 1 tuần.
 2. **Điểm nghẽn Logistics theo khu vực (Khu vực Đông Bắc - Northeast):**
    * Các bang thuộc vùng Đông Bắc chịu tỷ lệ giao trễ cao báo động: Alagoas (`AL`: **23.9%**), Maranhão (`MA`: **19.7%**), Ceará (`CE`: **15.2%**), cao gấp 4 lần so với bang trung tâm kinh tế São Paulo (`SP`: **5.9%**).
-   * Đơn hàng vận chuyển liên bang (Interstate) mất trung bình **15.1 ngày**, gần gấp đôi so với nội bang (**7.9 ngày**) và có chi phí cước vận chuyển cao hơn **73%**.
-3. **Phát hiện 21 Đối tác Doanh thu cao nhưng Rủi ro lớn (High Revenue - High Risk Sellers):**
-   * Xác định được **21 sellers** đạt doanh thu vượt trội (> 15.000 R$) nhưng lại sở hữu điểm đánh giá trung bình dưới **3.8 ★** và tỷ lệ trễ hạn cá biệt lên tới **21.2%**. Đây là nhóm đối tượng tạo doanh thu cao nhưng đang âm thầm hủy hoại danh tiếng thương hiệu của sàn.
-4. **Tỷ lệ khách hàng mua lại của sàn cực kỳ khiêm tốn (3.12%):**
-   * Trong 96.096 khách hàng duy nhất, chỉ có **2.997 khách hàng** từng thực hiện giao dịch lần thứ 2 trở lên.
+   * Đơn hàng vận chuyển liên bang (Interstate) mất trung bình **15.1 ngày**, gần gấp đôi so với nội bang (**7.9 ngày**) và có chi phí cước vận chuyển cao hơn **76.5%** (23.88 R$ so với 13.53 R$).
+3. **Phát hiện 16 Đối tác Doanh thu cao nhưng Rủi ro lớn (High Revenue - High Risk Sellers):**
+   * Áp dụng chuẩn **Order-Deduplicated** (loại bỏ lặp trùng cấp sản phẩm), xác định được **16 sellers** (hoặc 21 sellers nếu tính theo trọng số dòng sản phẩm) đạt doanh thu vượt trội (> 15.000 R$) nhưng sở hữu điểm đánh giá trung bình dưới **3.8 ★** và tỷ lệ trễ hạn cá biệt lên tới **22.1%** (thậm chí 64.3% ở các seller giao chậm kéo dài). Đây là nhóm đối tượng tạo doanh thu cao nhưng đang âm thầm hủy hoại danh tiếng thương hiệu của sàn.
+4. **Tỷ lệ khách hàng mua lại của sàn cực kỳ khiêm tốn (3.00% – 3.12%):**
+   * Trong 96.096 khách hàng duy nhất, có **2.997 khách hàng** từng phát sinh đơn hàng lần thứ 2 trở lên (**3.12%** - tính trên mọi trạng thái đơn). Nếu chỉ xét các đơn đã giao thành công (Delivered), tỷ lệ mua lại thực đạt là **3.00%** (2.801 / 93.358 khách hàng).
 5. **Hiệu ứng đòn bẩy từ trải nghiệm đơn hàng đầu tiên (First-Order Leverage):**
    * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng **giảm 18.7%** (từ 3.13% xuống chỉ còn 2.54%) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
 

@@ -83,37 +83,56 @@ LIMIT 10;
 -- --------------------------------------------------------------------
 -- QUERY 3: SELLER RISK MATRIX (High Revenue, Low Satisfaction Sellers)
 -- Business Goal: Flag top revenue sellers with average review < 3.8 for operational audit.
+-- Methodology Note: Review scores and delays are order-level attributes.
+-- Deduplicating to (seller_id, order_id) ensures order-level weighting (yielding 16 High-Risk sellers).
+-- Direct aggregation on fact_order_items yields item-level weighting (21 sellers).
 -- --------------------------------------------------------------------
-WITH seller_kpis AS (
+WITH seller_orders AS (
+    -- Bước 1: Tổng hợp ở cấp độ (seller, order) để bảo toàn grain của review_score và is_delayed
+    SELECT 
+        f.seller_id,
+        f.order_id,
+        SUM(f.price) AS order_revenue,
+        COUNT(f.order_item_id) AS items_in_order,
+        AVG(f.review_score) AS order_review_score,
+        MAX(f.is_delayed) AS is_order_delayed,
+        AVG(f.seller_dispatch_days) AS avg_dispatch_days
+    FROM fact_order_items f
+    WHERE f.order_status = 'delivered'
+    GROUP BY f.seller_id, f.order_id
+),
+seller_summary AS (
+    -- Bước 2: Tổng hợp lên cấp độ người bán (Seller Level)
     SELECT 
         s.seller_id,
         s.seller_city,
         s.seller_state,
-        ROUND(SUM(f.price), 2) AS total_revenue,
-        COUNT(f.order_item_id) AS items_sold,
-        COUNT(DISTINCT f.order_id) AS total_orders,
-        ROUND(AVG(f.review_score), 2) AS avg_review_score,
-        ROUND(AVG(f.is_delayed) * 100.0, 2) AS item_delay_rate_pct,
-        ROUND(AVG(f.seller_dispatch_days), 1) AS avg_dispatch_days
-    FROM fact_order_items f
-    JOIN dim_sellers s ON f.seller_id = s.seller_id
-    WHERE f.order_status = 'delivered'
+        ROUND(SUM(so.order_revenue), 2) AS total_revenue,
+        COUNT(so.order_id) AS total_orders,
+        SUM(so.items_in_order) AS items_sold,
+        ROUND(AVG(so.order_review_score), 2) AS avg_review_score,
+        ROUND(AVG(so.is_order_delayed) * 100.0, 2) AS order_delay_rate_pct,
+        ROUND(AVG(so.avg_dispatch_days), 1) AS avg_dispatch_days
+    FROM seller_orders so
+    JOIN dim_sellers s ON so.seller_id = s.seller_id
     GROUP BY s.seller_id, s.seller_city, s.seller_state
 )
 SELECT 
     seller_id,
+    seller_city,
     seller_state,
     total_revenue,
     total_orders,
+    items_sold,
     avg_review_score,
-    item_delay_rate_pct,
+    order_delay_rate_pct,
     avg_dispatch_days,
     CASE 
         WHEN total_revenue >= 15000 AND avg_review_score < 3.8 THEN 'CRITICAL RISK - AUDIT REQUIRED'
         WHEN total_revenue >= 15000 AND avg_review_score >= 4.2 THEN 'STAR SELLER'
         ELSE 'STANDARD'
     END AS operational_status
-FROM seller_kpis
+FROM seller_summary
 WHERE total_revenue >= 15000 AND avg_review_score < 3.8
 ORDER BY total_revenue DESC
 LIMIT 10;

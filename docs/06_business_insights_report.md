@@ -113,7 +113,7 @@ Thay vì áp dụng ngay trên diện rộng, các đề xuất sau cần đư�
 2. **Giả thuyết 2: "Buffer Days" cho Khu vực Đông Bắc**
    * *Giả thuyết:* Tăng thời gian ước tính (`estimated_delivery_days`) thêm 3–4 ngày cho các bang AL, MA, PI, CE sẽ kéo giảm tỷ lệ "bị tính là trễ" trên hệ thống, từ đó giảm áp lực tâm lý của người mua và cải thiện điểm hài lòng trung bình thêm ít nhất 0.2 ★.
 3. **Giả thuyết 3: "SLA Dispatching" cho Nhóm Seller Rủi ro Cao**
-   * *Giả thuyết:* Buộc 21 sellers rủi ro cao cam kết thời gian gửi hàng $\le 48h$ sẽ giảm tỷ lệ trễ chung của nhóm này từ 21.2% xuống dưới 10%.
+   * *Giả thuyết:* Buộc 16 sellers rủi ro cao (theo chuẩn Order-Deduplicated) cam kết thời gian gửi hàng $\le 48h$ sẽ giảm tỷ lệ trễ chung của nhóm này từ 21.2% xuống dưới 10%.
 4. **Giả thuyết 4: "First-Order VIP Route"**
    * *Giả thuyết:* Ưu tiên xử lý đơn hàng đầu tiên của khách hàng mới sẽ bảo vệ tỷ lệ Retention không bị sụt giảm 18.7%.
 
