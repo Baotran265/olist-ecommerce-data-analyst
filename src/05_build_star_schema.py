@@ -156,13 +156,14 @@ def load_into_sqlite(dim_date, dim_cust, dim_sellers, dim_products, fact_items):
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON;")
 
     # 1. Thực thi DDL Schema từ sql/01_create_star_schema.sql (Tạo bảng có Primary Key & Foreign Keys)
     ddl_path = os.path.join(BASE_DIR, 'sql', '01_create_star_schema.sql')
     with open(ddl_path, 'r', encoding='utf-8') as f:
         ddl_sql = f.read()
     cursor.executescript(ddl_sql)
-    print("  -> Applied DDL schema (Tables, Primary Keys, Foreign Keys, Indexes) from sql/01_create_star_schema.sql")
+    print("  -> Applied DDL schema (Tables, Primary Keys, Foreign Keys, Indexes) with PRAGMA foreign_keys = ON")
 
     # 2. Nạp dữ liệu vào bảng (if_exists='append' để giữ nguyên DDL constraints)
     dim_date.to_sql('dim_date', conn, if_exists='append', index=False)

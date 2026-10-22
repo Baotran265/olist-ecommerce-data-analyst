@@ -73,11 +73,12 @@ DIVIDE([Gross Order Value], [Total Orders], 0)
 ### Nhóm 2: Delivery & Logistics Performance (Hiệu suất Vận chuyển)
 
 ```dax
--- 8. Số đơn hàng đã giao thành công
+-- 8. Số đơn hàng đã giao thành công hợp lệ (có ngày giao thực tế)
 Delivered Orders = 
 CALCULATE(
     [Total Orders],
-    fact_order_items[order_status] = "delivered"
+    fact_order_items[order_status] = "delivered",
+    fact_order_items[is_valid_delivered] = 1
 )
 
 -- 9. Số đơn hàng bị giao trễ hẹn (Delivered Late)
@@ -136,6 +137,13 @@ AVERAGEX(
     fact_order_items[review_score]
 )
 
+-- 15b. Tổng số đơn có đánh giá hợp lệ (Valid Reviews Count)
+Valid Reviews Count = 
+CALCULATE(
+    [Delivered Orders],
+    NOT(ISBLANK(fact_order_items[review_score]))
+)
+
 -- 16. Số lượt đánh giá 1 sao (1-Star Count)
 1-Star Reviews = 
 CALCULATE(
@@ -143,15 +151,15 @@ CALCULATE(
     fact_order_items[review_score] = 1
 )
 
--- 17. Tỷ lệ đánh giá 1 sao (% 1-Star Ratio)
+-- 17. Tỷ lệ đánh giá 1 sao (% 1-Star Ratio trên tập có đánh giá)
 1-Star Rate % = 
-DIVIDE([1-Star Reviews], [Delivered Orders], 0)
+DIVIDE([1-Star Reviews], [Valid Reviews Count], 0)
 
--- 18. Tỷ lệ đánh giá 5 sao (% 5-Star Ratio)
+-- 18. Tỷ lệ đánh giá 5 sao (% 5-Star Ratio trên tập có đánh giá)
 5-Star Rate % = 
 DIVIDE(
     CALCULATE([Delivered Orders], fact_order_items[review_score] = 5),
-    [Delivered Orders],
+    [Valid Reviews Count],
     0
 )
 ```
@@ -188,22 +196,29 @@ COUNTROWS(
     )
 )
 
--- 22. Tỷ lệ khách hàng quay lại mua hàng (Repeat Purchase Rate)
---     Khách hàng có >= 2 đơn hàng riêng biệt / Tổng khách hàng
+-- 22. Tỷ lệ khách hàng mua lại hoàn tất (Repeat Purchase Rate - Delivered Orders Only)
+--     Khách hàng có >= 2 đơn hàng giao thành công / Tổng khách hàng có đơn giao thành công
+--     Lưu ý kỹ thuật DAX: Sử dụng cấu trúc tường minh để không phụ thuộc vào hướng quan hệ 2 chiều (Bidirectional)
 Repeat Purchase Rate % = 
-VAR TotalCustomers = [Total Unique Customers]
-VAR RepeatCustomers = 
-    COUNTROWS(
-        FILTER(
-            ADDCOLUMNS(
-                VALUES(dim_customers[customer_unique_id]),
-                "OrderCount", CALCULATE([Total Orders])
-            ),
-            [OrderCount] > 1
+VAR CustomerOrderSummary = 
+    ADDCOLUMNS(
+        VALUES(dim_customers[customer_unique_id]),
+        "CompletedOrders", 
+        CALCULATE(
+            DISTINCTCOUNT(fact_order_items[order_id]),
+            fact_order_items[order_status] = "delivered"
         )
     )
+VAR RepeatCustomers = 
+    COUNTROWS(
+        FILTER(CustomerOrderSummary, [CompletedOrders] > 1)
+    )
+VAR TotalCompletedCustomers = 
+    COUNTROWS(
+        FILTER(CustomerOrderSummary, [CompletedOrders] >= 1)
+    )
 RETURN
-    DIVIDE(RepeatCustomers, TotalCustomers, 0)
+    DIVIDE(RepeatCustomers, TotalCompletedCustomers, 0)
 ```
 
 ---

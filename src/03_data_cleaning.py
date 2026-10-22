@@ -117,7 +117,7 @@ def clean_geolocation():
         'Geolocation',
         raw_count,
         len(geo_agg),
-        f"Xóa {raw_count - len(df_geo_clean):,} dòng trùng/ngoại lai; Gom nhóm (group by) 19,015 zip code duy nhất (median lat/lng, mode city/state).",
+        f"Xóa {raw_count - len(df_geo_clean):,} dòng trùng/ngoại lai; Gom nhóm (group by) {len(geo_agg):,} zip code duy nhất (median lat/lng, mode city/state).",
         "Triệt tiêu hoàn toàn rủi ro nhân dòng (Row Multiplication) khi kết nối dữ liệu địa lý với Customers và Sellers."
     )
     return geo_agg
@@ -294,16 +294,18 @@ def clean_orders_and_engineer_features():
     ).round(2)
 
     # 4. Gắn cờ trạng thái giao hàng (Delivery Status Flag)
-    # is_delayed = 1 nếu giao trễ (> 0 ngày) đối với đơn hàng đã giao thành công
-    df_orders['is_delayed'] = np.where(
-        (df_orders['order_status'] == 'delivered') & (df_orders['delivery_delay_days'] > 0),
+    # is_valid_delivered: 1 nếu đơn hàng giao thành công và có ngày giao thực tế hợp lệ (96,470 đơn)
+    df_orders['is_valid_delivered'] = np.where(
+        (df_orders['order_status'] == 'delivered') & (df_orders['order_delivered_customer_date'].notna()),
         1,
         0
     )
 
-    # Flag đơn hàng thành công hợp lệ có đầy đủ ngày giao
-    df_orders['is_valid_delivered'] = np.where(
-        (df_orders['order_status'] == 'delivered') & (df_orders['order_delivered_customer_date'].notna()),
+    # is_delayed: 1 nếu giao trễ (> 0 ngày) đối với đơn hàng hợp lệ; 0 nếu đúng hạn
+    # Lưu ý: Các đơn thiếu ngày giao hoặc chưa giao thì is_delayed = 0 nhưng có is_valid_delivered = 0.
+    # Mọi phân tích KPI vận chuyển phải lọc WHERE is_valid_delivered = 1 để tránh tính nhầm đơn thiếu ngày là đúng hạn.
+    df_orders['is_delayed'] = np.where(
+        (df_orders['is_valid_delivered'] == 1) & (df_orders['delivery_delay_days'] > 0),
         1,
         0
     )
@@ -421,7 +423,7 @@ def generate_cleaning_log_report():
         md += f"| **{row['Table']}** | {row['Raw Rows']} | {row['Cleaned Rows']} | {row['Rows Delta']} | {row['Actions Taken']} | {row['Business Justification']} |\n"
 
     md += "\n## 2. Key Data Engineering Highlights\n\n"
-    md += "1. **Triệt tiêu nhân dòng (Zero Row Multiplication):** Bảng Geolocation (hơn 1 triệu dòng) được gom nhóm (aggregate) theo 19,015 zip code duy nhất với giá trị tọa độ trung vị (median). Bảng Review được lọc giữ lại review mới nhất cho mỗi order.\n"
+    md += "1. **Triệt tiêu nhân dòng (Zero Row Multiplication):** Bảng Geolocation (hơn 1 triệu dòng) được gom nhóm (aggregate) theo 19,010 zip code duy nhất với giá trị tọa độ trung vị (median). Bảng Review được lọc giữ lại review mới nhất cho mỗi order.\n"
     md += "2. **Giải quyết dứt điểm bản dịch thiếu:** Đã bổ sung bản dịch tiếng Anh cho `pc_gamer` và `portateis_cozinha_e_preparadores_de_alimentos` theo đúng cam kết trong Business Problem.\n"
     md += "3. **Feature Engineering sẵn sàng cho Business Questions:** Đã tính toán chuẩn hóa `actual_delivery_days`, `delivery_delay_days`, `is_delayed`, `delay_bucket`, `is_interstate` để phục vụ trực tiếp phân tích tương quan giữa giao hàng trễ và điểm hài lòng khách hàng.\n"
     md += "4. **Master Dataset:** Tạo bảng tích hợp `olist_master_analytical_dataset.csv` giúp việc kết nối vào Power BI / Jupyter Notebook trở nên cực kỳ thuận tiện và an toàn.\n"

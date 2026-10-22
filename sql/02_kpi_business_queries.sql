@@ -53,7 +53,7 @@ WITH order_level_state AS (
         f.review_score
     FROM fact_order_items f
     JOIN dim_customers c ON f.customer_id = c.customer_id
-    WHERE f.order_status = 'delivered'
+    WHERE f.order_status = 'delivered' AND f.is_valid_delivered = 1
     GROUP BY f.order_id, c.customer_state, f.is_delayed, f.actual_delivery_days, f.review_score
 ),
 state_summary AS (
@@ -141,6 +141,9 @@ LIMIT 10;
 -- --------------------------------------------------------------------
 -- QUERY 4: PRODUCT CATEGORY PERFORMANCE & FREIGHT BURDEN
 -- Business Goal: Evaluate GMV, Freight % of GMV, and ratings by category.
+-- Methodology Note: Categories are item-level attributes. Aggregation is performed
+-- directly at fact_order_items grain (item-level), weighting reviews and delays by
+-- items sold in each category (consistent with Python category performance analysis).
 -- --------------------------------------------------------------------
 SELECT 
     p.product_category_formatted AS category_name,
@@ -159,43 +162,44 @@ LIMIT 15;
 
 
 -- --------------------------------------------------------------------
--- QUERY 5: CUSTOMER RETENTION & FIRST ORDER EXPERIENCE
--- Business Goal: Quantify the drop in repeat purchase rate caused by a delayed first order.
--- Methodological Note:
--- 1. Repeat Buyer is defined as a customer with >= 2 distinct lifetime orders.
--- 2. First order must be 'delivered' to establish whether it arrived on-time or delayed.
--- 3. Limitation (Right-Censoring): Olist dataset spans 2016-2018. Customers acquired
---    near the end of the window (e.g., Aug 2018) had less opportunity to repeat purchase
---    than customers acquired in 2017.
+-- QUERY 5: CUSTOMER RETENTION & FIRST ORDER EXPERIENCE (Completed Purchases)
+-- Business Goal: Quantify the drop in completed repeat purchases caused by a delayed first order.
+-- Methodological Notes:
+-- 1. Repeat Completed Buyer is defined as a customer with >= 2 delivered orders.
+-- 2. First order must be 'delivered' and have valid delivery date (is_valid_delivered = 1).
+-- 3. SQL vs Python Sequence Grain: In SQL, order_date_key orders by date (day-grain). 
+--    In Python, order_purchase_timestamp orders by exact timestamp (second-grain).
+--    Both methodologies confirm a significant ~17% - 20% relative drop in customer retention.
+-- 4. Limitation (Right-Censoring): Olist dataset spans 2016-2018. Customers acquired
+--    near the end of the window had less opportunity to repeat purchase.
 -- --------------------------------------------------------------------
 WITH customer_orders AS (
-    -- Group by customer_unique_id and order_id to get 1 row per unique order
+    -- Group by customer_unique_id and order_id on delivered orders only
     SELECT 
         c.customer_unique_id,
         f.order_id,
         f.order_date_key,
         f.is_delayed,
-        f.order_status,
         ROW_NUMBER() OVER (
             PARTITION BY c.customer_unique_id 
             ORDER BY f.order_date_key ASC, f.order_id ASC
         ) AS order_sequence,
         COUNT(f.order_id) OVER (
             PARTITION BY c.customer_unique_id
-        ) AS total_lifetime_orders
+        ) AS total_completed_orders
     FROM fact_order_items f
     JOIN dim_customers c ON f.customer_id = c.customer_id
-    GROUP BY c.customer_unique_id, f.order_id, f.order_date_key, f.is_delayed, f.order_status
+    WHERE f.order_status = 'delivered' AND f.is_valid_delivered = 1
+    GROUP BY c.customer_unique_id, f.order_id, f.order_date_key, f.is_delayed
 ),
 first_orders AS (
-    -- Lọc riêng đơn hàng đầu tiên (First Order) đã giao thành công
+    -- Lọc riêng đơn hàng đầu tiên (First Order) giao thành công hợp lệ
     SELECT 
         customer_unique_id,
         is_delayed,
-        CASE WHEN total_lifetime_orders > 1 THEN 1 ELSE 0 END AS is_repeat_buyer
+        CASE WHEN total_completed_orders > 1 THEN 1 ELSE 0 END AS is_repeat_buyer
     FROM customer_orders
     WHERE order_sequence = 1
-      AND order_status = 'delivered'
 )
 SELECT 
     CASE is_delayed 

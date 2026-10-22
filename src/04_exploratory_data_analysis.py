@@ -114,23 +114,35 @@ def analyze_delivery_delay_vs_satisfaction(df):
 # ==========================================
 def analyze_geographic_bottlenecks(df):
     print("--- [Question 2] Geographic Bottlenecks & Interstate Delivery ---")
-    deliv = df[df['order_status'] == 'delivered'].drop_duplicates(subset=['order_id']).copy()
+    # Lọc đơn giao thành công hợp lệ (có ngày giao thực tế - 96,470 đơn)
+    deliv_valid = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
 
-    # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate)
-    interstate_stats = deliv.groupby('is_interstate').agg(
+    # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate) ở cấp độ ĐƠN HÀNG (Order-level)
+    # Tính tổng cước phí mỗi đơn (thay vì lấy ngẫu nhiên 1 sản phẩm) để phản ánh đúng gánh nặng cước ship
+    order_routes = deliv_valid.groupby('order_id').agg(
+        is_interstate=('is_interstate', 'max'),
+        total_order_freight=('freight_value', 'sum'),
+        total_order_value=('price', 'sum'),
+        actual_delivery_days=('actual_delivery_days', 'first'),
+        is_delayed=('is_delayed', 'max'),
+        review_score=('review_score', 'first'),
+        customer_state=('customer_state', 'first')
+    ).reset_index()
+
+    interstate_stats = order_routes.groupby('is_interstate').agg(
         total_orders=('order_id', 'count'),
         avg_actual_days=('actual_delivery_days', 'mean'),
-        avg_freight_value=('freight_value', 'mean'),
+        avg_order_freight=('total_order_freight', 'mean'),
         delay_rate=('is_delayed', lambda s: s.mean() * 100),
         avg_review=('review_score', 'mean')
     ).reset_index()
     interstate_stats['route_type'] = interstate_stats['is_interstate'].map({0: 'Intrastate (Nội bang)', 1: 'Interstate (Liên bang)'})
     interstate_stats.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q2_interstate_vs_intrastate.csv'), index=False)
-    print("Interstate vs Intrastate Benchmark:")
+    print("Interstate vs Intrastate Benchmark (Order-level Total Freight):")
     print(interstate_stats)
 
-    # 2. Thống kê theo Bang (State Delivery Performance)
-    state_stats = deliv.groupby('customer_state').agg(
+    # 2. Thống kê theo Bang (State Delivery Performance trên 96,470 đơn hợp lệ)
+    state_stats = order_routes.groupby('customer_state').agg(
         total_orders=('order_id', 'count'),
         delayed_orders=('is_delayed', 'sum'),
         delay_rate=('is_delayed', lambda s: s.mean() * 100),
@@ -158,7 +170,7 @@ def analyze_geographic_bottlenecks(df):
     ax1.set_xlabel('Delivery Delay Rate (% of orders arriving late)', fontsize=11)
     ax1.set_title('Geographic Delivery Bottlenecks: Top Delayed States vs Best Performing States\n(Northeast region suffers the highest delay rates > 15%)',
                   fontsize=13, fontweight='bold', pad=15)
-    ax1.axvline(deliv['is_delayed'].mean() * 100, color='black', linestyle='--', label=f"National Avg Delay: {deliv['is_delayed'].mean()*100:.1f}%")
+    ax1.axvline(order_routes['is_delayed'].mean() * 100, color='black', linestyle='--', label=f"National Avg Delay: {order_routes['is_delayed'].mean()*100:.1f}%")
 
     for bar, (_, row) in zip(bars, plot_states.iterrows()):
         w = bar.get_width()
@@ -178,7 +190,8 @@ def analyze_geographic_bottlenecks(df):
 # ==========================================
 def analyze_seller_risk_matrix(df):
     print("--- [Question 3] Seller Risk Matrix (High Revenue - Low Satisfaction) ---")
-    deliv = df[df['order_status'] == 'delivered'].copy()
+    # Lọc đơn giao thành công hợp lệ (có ngày giao thực tế)
+    deliv = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
 
     # Grain-Safe: Deduplicate về cấp seller-order để phản ánh đúng trải nghiệm của từng đơn hàng
     seller_orders = deliv.groupby(['seller_id', 'order_id']).agg(
@@ -325,12 +338,15 @@ def analyze_customer_retention(df):
     print(f"Total Unique Customers (Delivered Only): {total_cust_deliv:,} | Repeat Completed Purchases: {repeat_deliv_count:,} ({repeat_deliv_pct:.2f}%)")
 
     # Xác định đơn hàng đầu tiên (First Order) của từng khách hàng theo timestamp mua hàng
-    sorted_orders = merged.sort_values(by=['customer_unique_id', 'order_purchase_timestamp'])
-    first_orders = sorted_orders.drop_duplicates(subset=['customer_unique_id'], keep='first').copy()
-    first_orders['is_repeat_customer'] = first_orders['customer_unique_id'].isin(repeat_all_ids).astype(int)
+    # Để thống nhất với định nghĩa chuẩn 'Repeat Completed Purchases', đo lường khả năng khách quay lại mua thành công
+    deliv_sorted = deliv_orders.sort_values(by=['customer_unique_id', 'order_purchase_timestamp'])
+    deliv_first = deliv_sorted.drop_duplicates(subset=['customer_unique_id'], keep='first').copy()
+    
+    # Chỉ xét các đơn đầu hợp lệ có ngày giao (is_valid_delivered == 1)
+    deliv_first = deliv_first[deliv_first['is_valid_delivered'] == 1].copy()
+    deliv_first['is_repeat_customer'] = deliv_first['customer_unique_id'].isin(repeat_deliv_ids).astype(int)
 
-    # Đánh giá tác động của giao hàng trễ ở đơn đầu tiên (trên tập đơn đầu delivered)
-    deliv_first = first_orders[first_orders['order_status'] == 'delivered'].copy()
+    # Đánh giá tác động của giao hàng trễ ở đơn đầu tiên đối với tỷ lệ quay lại mua thành công
     retention_by_delay = deliv_first.groupby('is_delayed').agg(
         customer_count=('customer_unique_id', 'count'),
         repeat_rate=('is_repeat_customer', lambda s: s.mean() * 100)
@@ -338,6 +354,7 @@ def analyze_customer_retention(df):
 
     retention_by_delay['status_label'] = retention_by_delay['is_delayed'].map({0: '1st Order On-Time', 1: '1st Order Delayed'})
     retention_by_delay.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q5_retention_by_first_order_delay.csv'), index=False)
+    print("Impact of 1st Order Delivery on Repeat Completed Purchases:")
     print(retention_by_delay)
 
     # Trực quan hóa

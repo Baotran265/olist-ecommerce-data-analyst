@@ -9,13 +9,13 @@
 
 ## Executive Summary (Tóm tắt điều hành)
 
-Phân tích trên **96,478 đơn hàng đã giao thành công** và **96,096 khách hàng duy nhất** trên nền tảng Olist (2016 - 2018) đã làm sáng tỏ 5 điểm then chốt chi phối sức khỏe vận hành và trải nghiệm khách hàng:
+Phân tích trên **96,470 đơn hàng đã giao thành công hợp lệ** (loại bỏ 8 đơn delivered thiếu ngày giao thực tế) và **96,096 khách hàng duy nhất** trên nền tảng Olist (2016 - 2018) đã làm sáng tỏ 5 điểm then chốt chi phối sức khỏe vận hành và trải nghiệm khách hàng:
 
-1. **"Điểm gãy chịu đựng" (Tolerance Cliff) ở mốc 3 ngày trễ:** Khách hàng chấp nhận sự trễ hẹn nhẹ từ 1-3 ngày (điểm hài lòng chỉ giảm nhẹ từ 4.29 ★ xuống 3.76 ★). Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự hài lòng sụp đổ hoàn toàn xuống 2.32 ★ (4-7 ngày) và 1.73 ★ (>7 ngày)**, với hơn 50% - 67% khách hàng để lại đánh giá 1 sao.
+1. **"Điểm gãy chịu đựng" (Tolerance Cliff) ở mốc 3 ngày trễ:** Khách hàng chấp nhận sự trễ hẹn nhẹ từ 1-3 ngày (điểm hài lòng chỉ giảm nhẹ từ 4.29 ★ xuống 3.76 ★). Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự hài lòng sụp đổ hoàn toàn xuống 2.32 ★ (4-7 ngày) và 1.73 ★ (>7 ngày)**, với hơn 53% - 69% (chính xác là 68.8% ở nhóm trễ >7 ngày) khách hàng để lại đánh giá 1 sao.
 2. **Nghẽn cổ chai logistics tại vùng Đông Bắc (Northeast):** Các bang Đông Bắc như **Alagoas (AL: 23.9% trễ)**, **Maranhão (MA: 19.7% trễ)** có tỷ lệ trễ hẹn cao gấp 4 lần so với thủ phủ kinh tế São Paulo (SP: 5.9% trễ). Giao hàng liên bang (`is_interstate = 1`) mất trung bình 15.1 ngày, gấp đôi so với nội bang (7.9 ngày).
-3. **21 Seller thuộc nhóm "Rủi ro cao" (High Revenue - Low Satisfaction):** Có 21 nhà bán hàng tạo ra doanh thu trên 15,000 R$ nhưng điểm đánh giá trung bình dưới 3.8 ★ (thậm chí có seller đạt doanh thu khủng nhưng tỷ lệ trễ lên tới 21.2%). Đây là những đối tượng gây tổn hại thương hiệu nghiêm trọng nhất.
-4. **Tỷ lệ khách hàng quay lại (Repeat Purchase Rate) cực kỳ thấp (3.12%):** Trong 96,096 khách hàng, chỉ có 2,997 người mua hàng từ lần thứ 2 trở lên.
-5. **Đòn bẩy trải nghiệm đơn đầu tiên:** Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng **sụt giảm gần 19%** (từ 3.13% xuống 2.54%) so với khách hàng được giao đúng hẹn.
+3. **16 Seller rủi ro cao theo chuẩn Order-Deduplicated (hoặc 21 Seller theo chuẩn Item-Weighted):** Các nhà bán hàng này tạo ra doanh thu trên 15,000 R$ nhưng điểm đánh giá trung bình dưới 3.8 ★ (thậm chí có seller đạt doanh thu khủng nhưng tỷ lệ trễ lên tới 21.2%). Đây là những đối tượng gây tổn hại thương hiệu nghiêm trọng nhất.
+4. **Tỷ lệ khách hàng quay lại (Repeat Purchase Rate) cực kỳ thấp (3.12%):** Trong 96,096 khách hàng, chỉ có 2,997 người mua hàng từ lần thứ 2 trở lên (nếu chỉ xét đơn giao thành công, tỷ lệ là 3.00% với 2,801 khách hàng).
+5. **Đòn bẩy trải nghiệm đơn đầu tiên:** Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng **sụt giảm 17.4%** (từ 3.04% xuống 2.51%) so với khách hàng được giao đúng hẹn.
 
 ---
 
@@ -25,10 +25,10 @@ Phân tích trên **96,478 đơn hàng đã giao thành công** và **96,096 kh�
 
 | Nhóm thời gian giao hàng (Delay Bucket) | Số đơn hàng | Điểm đánh giá TB | Trung vị | % Đánh giá 1 ★ | % Đánh giá 5 ★ |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Giao đúng hạn / Sớm (On Time / Early)** | 88,650 (91.9%) | **4.29 ★** | 5.0 | 6.55% | **62.10%** |
-| **Trễ 1 - 3 ngày (1-3 Days Late)** | 2,660 (2.8%) | **3.76 ★** | 4.0 | 13.72% | 42.78% |
-| **Trễ 4 - 7 ngày (4-7 Days Late)** | 1,819 (1.9%) | **2.32 ★** | 1.0 | **51.68%** | 17.59% |
-| **Trễ > 7 ngày (> 7 Days Late)** | 3,341 (3.5%) | **1.73 ★** | 1.0 | **66.90%** | 7.24% |
+| **Giao đúng hạn / Sớm (On Time / Early)** | 88,650 (91.9%) | **4.29 ★** | 5.0 | 6.59% | **62.43%** |
+| **Trễ 1 - 3 ngày (1-3 Days Late)** | 2,660 (2.8%) | **3.76 ★** | 4.0 | 13.86% | 43.20% |
+| **Trễ 4 - 7 ngày (4-7 Days Late)** | 1,819 (1.9%) | **2.32 ★** | 1.0 | **53.02%** | 18.05% |
+| **Trễ > 7 ngày (> 7 Days Late)** | 3,341 (3.5%) | **1.73 ★** | 1.0 | **68.81%** | 7.45% |
 
 ![Fig 1: Delivery Delay vs Review Score](../outputs/figures/fig1_delivery_delay_vs_review_score.png)
 
@@ -46,11 +46,11 @@ Phân tích trên **96,478 đơn hàng đã giao thành công** và **96,096 kh�
 | **Piauí (PI)** | 476 | **15.97%** | 19.5 ngày | 3.99 ★ |
 | **Ceará (CE)** | 1,279 | **15.32%** | 21.3 ngày | 3.94 ★ |
 | **Sergipe (SE)** | 335 | **15.22%** | 21.5 ngày | 3.91 ★ |
-| *Toàn quốc (Benchmark)* | *96,478* | *8.11%* | *12.5 ngày* | *4.16 ★* |
+| *Toàn quốc (Benchmark)* | *96,470* | *8.11%* | *12.5 ngày* | *4.16 ★* |
 | **São Paulo (SP)** | 40,501 | **5.89%** | 8.8 ngày | 4.25 ★ |
 | **Paraná (PR)** | 4,923 | **5.00%** | 12.0 ngày | 4.24 ★ |
 
-> 💡 **Lưu ý về Grain (Độ chi tiết dữ liệu):** Tỷ lệ giao trễ toàn quốc ở cấp độ **Đơn hàng (Order-level)** là **8.11%** (7,820 / 96,478 đơn). Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (8,707 / 110,197) do các đơn hàng giỏ lớn (nhiều items) có tỷ lệ trễ thấp hơn. Để phản ánh đúng trải nghiệm của khách hàng, toàn bộ báo cáo và Power BI thống nhất sử dụng chuẩn cấp độ Đơn hàng (8.11% trễ, tương ứng **91.89% đúng hạn**).
+> 💡 **Lưu ý về Grain (Độ chi tiết dữ liệu):** Tỷ lệ giao trễ toàn quốc ở cấp độ **Đơn hàng (Order-level)** là **8.11%** (7,820 / 96,470 đơn). Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (8,707 / 110,197) do các đơn hàng giỏ lớn (nhiều items) có tỷ lệ trễ thấp hơn. Để phản ánh đúng trải nghiệm của khách hàng, toàn bộ báo cáo và Power BI thống nhất sử dụng chuẩn cấp độ Đơn hàng (8.11% trễ, tương ứng **91.89% đúng hạn**).
 
 ![Fig 2: State Delivery Performance](../outputs/figures/fig2_state_delivery_performance.png)
 
@@ -93,8 +93,8 @@ Bằng cách phân loại người bán dựa trên **Tổng Doanh thu (Trục X
 
 | Trạng thái giao hàng Đơn đầu tiên | Tổng số khách hàng | Tỷ lệ quay lại mua tiếp (%) | Mức độ sụt giảm tương đối |
 | :--- | :---: | :---: | :---: |
-| **Giao đúng hạn / Sớm (On-Time)** | 85,669 | **3.13%** | — |
-| **Bị giao trễ (Delayed)** | 7,584 | **2.54%** | **-18.7% (Sụt giảm nghiêm trọng)** |
+| **Giao đúng hạn / Sớm (On-Time)** | 85,752 | **3.04%** | — |
+| **Bị giao trễ (Delayed)** | 7,598 | **2.51%** | **-17.4% (Sụt giảm nghiêm trọng)** |
 
 ![Fig 5: Customer Retention & First Order Impact](../outputs/figures/fig5_customer_retention_and_first_order_impact.png)
 
@@ -115,7 +115,7 @@ Thay vì áp dụng ngay trên diện rộng, các đề xuất sau cần đư�
 3. **Giả thuyết 3: "SLA Dispatching" cho Nhóm Seller Rủi ro Cao**
    * *Giả thuyết:* Buộc 16 sellers rủi ro cao (theo chuẩn Order-Deduplicated) cam kết thời gian gửi hàng $\le 48h$ sẽ giảm tỷ lệ trễ chung của nhóm này từ 21.2% xuống dưới 10%.
 4. **Giả thuyết 4: "First-Order VIP Route"**
-   * *Giả thuyết:* Ưu tiên xử lý đơn hàng đầu tiên của khách hàng mới sẽ bảo vệ tỷ lệ Retention không bị sụt giảm 18.7%.
+   * *Giả thuyết:* Ưu tiên xử lý đơn hàng đầu tiên của khách hàng mới sẽ bảo vệ tỷ lệ Retention không bị sụt giảm 17.4%.
 
 ---
 

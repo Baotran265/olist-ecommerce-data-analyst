@@ -21,20 +21,20 @@ Olist là sàn thương mại điện tử kết nối các doanh nghiệp vừa
 
 ## 💡 2. 5 Phát Hiện Kinh Doanh Trọng Yếu (Executive Insights)
 
-Dựa trên việc làm sạch và phân tích **96.478 đơn hàng đã giao thành công** và **96.096 khách hàng duy nhất** giai đoạn 2016 – 2018:
+Dựa trên việc làm sạch và phân tích **96.470 đơn hàng đã giao thành công hợp lệ** (loại bỏ 8 đơn delivered thiếu ngày giao thực tế) và **96.096 khách hàng duy nhất** giai đoạn 2016 – 2018:
 
 1. **"Vực thẳm kiên nhẫn" (The Tolerance Cliff) tại ngày thứ 3:**
    * Khách hàng có xu hướng dễ tính với các đơn trễ nhẹ từ 1 – 3 ngày (điểm hài lòng trung bình đạt **3.76 ★** so với **4.29 ★** của đơn đúng hạn).
    * Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự kiên nhẫn hoàn toàn sụp đổ:** điểm đánh giá rớt thẳng đứng xuống **2.32 ★** (trễ 4–7 ngày) và chạm đáy **1.73 ★** (trễ > 7 ngày). Có tới **68.8% khách hàng chấm 1 sao** (tính trên tập đơn có đánh giá hợp lệ) khi đơn hàng trễ hơn 1 tuần.
 2. **Điểm nghẽn Logistics theo khu vực (Khu vực Đông Bắc - Northeast):**
    * Các bang thuộc vùng Đông Bắc chịu tỷ lệ giao trễ cao báo động: Alagoas (`AL`: **23.9%**), Maranhão (`MA`: **19.7%**), Ceará (`CE`: **15.2%**), cao gấp 4 lần so với bang trung tâm kinh tế São Paulo (`SP`: **5.9%**).
-   * Đơn hàng vận chuyển liên bang (Interstate) mất trung bình **15.1 ngày**, gần gấp đôi so với nội bang (**7.9 ngày**) và có chi phí cước vận chuyển cao hơn **76.5%** (23.88 R$ so với 13.53 R$).
+   * Đơn hàng vận chuyển liên bang (Interstate) mất trung bình **15.1 ngày**, gần gấp đôi so với nội bang (**7.9 ngày**) và có tổng chi phí cước vận chuyển trung bình mỗi đơn cao hơn **75.5%** (26.94 R$ so với 15.35 R$).
 3. **Phát hiện 16 Đối tác Doanh thu cao nhưng Rủi ro lớn (High Revenue - High Risk Sellers):**
    * Áp dụng chuẩn **Order-Deduplicated** (loại bỏ lặp trùng cấp sản phẩm), xác định được **16 sellers** (hoặc 21 sellers nếu tính theo trọng số dòng sản phẩm) đạt doanh thu vượt trội (> 15.000 R$) nhưng sở hữu điểm đánh giá trung bình dưới **3.8 ★** và tỷ lệ trễ hạn cá biệt lên tới **22.1%** (thậm chí 64.3% ở các seller giao chậm kéo dài). Đây là nhóm đối tượng tạo doanh thu cao nhưng đang âm thầm hủy hoại danh tiếng thương hiệu của sàn.
-4. **Tỷ lệ khách hàng mua lại của sàn cực kỳ khiêm tốn (3.00% – 3.12%):**
-   * Trong 96.096 khách hàng duy nhất, có **2.997 khách hàng** từng phát sinh đơn hàng lần thứ 2 trở lên (**3.12%** - tính trên mọi trạng thái đơn). Nếu chỉ xét các đơn đã giao thành công (Delivered), tỷ lệ mua lại thực đạt là **3.00%** (2.801 / 93.358 khách hàng).
+4. **Tỷ lệ khách hàng mua lại hoàn tất (Repeat Completed Purchases): 3.00%:**
+   * Trong 93.358 khách hàng có đơn giao thành công, chỉ có **2.801 khách hàng** từng hoàn tất giao dịch lần thứ 2 trở lên (**3.00%**). Nếu tính trên mọi đơn đặt hàng (kể cả đơn hủy/chưa hoàn tất), tỷ lệ này là **3.12%** (2.997 / 96.096 khách hàng).
 5. **Hiệu ứng đòn bẩy từ trải nghiệm đơn hàng đầu tiên (First-Order Leverage):**
-   * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng **giảm 18.7%** (từ 3.13% xuống chỉ còn 2.54%) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
+   * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng thành công **giảm 17.4%** (từ 3.04% xuống chỉ còn 2.51%) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
 
 > 📌 **Tính Liêm Chính Phương Pháp Luận (Methodological Notes):**
 > - **Giới hạn quan sát (Right-Censoring):** Tỷ lệ mua lại 3.12% được tính trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018). Những khách hàng gia nhập vào tháng 08/2018 có ít thời gian để quay lại mua sắm hơn khách hàng gia nhập năm 2017.
@@ -53,7 +53,7 @@ Mô hình Dashboard được thiết kế theo tiêu chuẩn Business Intelligen
 
 * **Hàng KPI Cards:** Tổng doanh thu (R$ 15.42M), Tổng đơn hàng (96.5K), Tỷ lệ giao đúng hạn (91.9%), Điểm đánh giá trung bình (4.13 ★), Tỷ lệ khách hàng quay lại (3.12%).
 
-> 💡 **Ghi chú về Grain Mismatch:** Tỷ lệ giao trễ toàn quốc ở cấp độ **Đơn hàng (Order-level)** là **8.11%** (tương ứng **91.89% đúng hạn** trên 96,478 đơn hàng đã giao). Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (92.10% đúng hạn). Dự án sử dụng chuẩn cấp độ Đơn hàng để phản ánh trung thực trải nghiệm của khách hàng.
+> 💡 **Ghi chú về Chuẩn Mẫu số & Grain Mismatch:** Tỷ lệ giao đúng hạn toàn quốc đạt **91.89% (~91.9%)** (tương ứng tỷ lệ trễ **8.11%**) trên **96,470 đơn hàng giao thành công có đầy đủ ngày giao thực tế**. Có đúng 8 đơn hàng có trạng thái `delivered` nhưng thiếu ngày giao thực tế (`order_delivered_customer_date IS NULL`) đã được tách riêng để không tính nhầm thành giao đúng hạn. Nếu tính ở cấp độ **Sản phẩm (Item-level trên 110,197 dòng)**, tỷ lệ trễ là **7.90%** (92.10% đúng hạn). Dự án sử dụng chuẩn cấp độ Đơn hàng để phản ánh trung thực trải nghiệm của người mua.
 
 * **Xu hướng Thời gian (Trend Analysis):** Biểu đồ kết hợp cột và đường thể hiện diễn biến Doanh thu theo tháng so sánh với Tỷ lệ giao hàng trễ (Delay Rate %).
 * **Phân tích Vực thẳm kiên nhẫn (Delay Buckets vs Review):** Trực quan hóa điểm số đánh giá và tỷ lệ đơn 1 sao tương ứng với từng khoảng thời gian trễ (Đúng hẹn, 1–3 ngày, 4–7 ngày, > 7 ngày).
