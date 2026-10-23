@@ -97,22 +97,36 @@ def clean_geolocation():
     raw_count = len(df_geo)
 
     # 1. Loại bỏ các dòng trùng lặp 100%
-    df_geo_clean = df_geo.drop_duplicates()
+    df_geo_dedup = df_geo.drop_duplicates()
+    dup_removed = raw_count - len(df_geo_dedup)
 
     # 2. Lọc bỏ các tọa độ ngoại lai ngoài lãnh thổ Brazil (Lat: -34 to 6, Lng: -74 to -34)
     valid_coords = (
-        (df_geo_clean['geolocation_lat'] >= -34) & (df_geo_clean['geolocation_lat'] <= 6) &
-        (df_geo_clean['geolocation_lng'] >= -74) & (df_geo_clean['geolocation_lng'] <= -34)
+        (df_geo_dedup['geolocation_lat'] >= -34) & (df_geo_dedup['geolocation_lat'] <= 6) &
+        (df_geo_dedup['geolocation_lng'] >= -74) & (df_geo_dedup['geolocation_lng'] <= -34)
     )
-    df_geo_clean = df_geo_clean[valid_coords].copy()
+    df_geo_valid = df_geo_dedup[valid_coords].copy()
+    outliers_removed = len(df_geo_dedup) - len(df_geo_valid)
 
-    # 3. Chuẩn hóa tên thành phố (strip và lower)
-    df_geo_clean['geolocation_city'] = df_geo_clean['geolocation_city'].astype(str).str.strip().str.lower()
-    df_geo_clean['geolocation_state'] = df_geo_clean['geolocation_state'].astype(str).str.strip().str.upper()
+    # 3. Log số lượng zip code bị thiếu TRƯỚC KHI xử lý
+    missing_zip_count = df_geo_valid['geolocation_zip_code_prefix'].isna().sum()
+    print(f"[LOG] Số lượng dòng geolocation thiếu zip code: {missing_zip_count}")
+    
+    # 4. Loại bỏ các dòng thiếu zip hoặc NaN trước khi chuyển sang string
+    df_geo_valid = df_geo_valid.dropna(subset=['geolocation_zip_code_prefix']).copy()
+    
+    # 5. Xử lý missing city/state TRƯỚC KHI chuyển sang string
+    # Điền NaN bằng chuỗi 'Unknown' để mode() không bị lỗi
+    df_geo_valid['geolocation_city'] = df_geo_valid['geolocation_city'].fillna('Unknown')
+    df_geo_valid['geolocation_state'] = df_geo_valid['geolocation_state'].fillna('Unknown')
+    
+    # 6. Bây giờ mới chuyển sang string và chuẩn hóa
+    df_geo_valid['geolocation_city'] = df_geo_valid['geolocation_city'].astype(str).str.strip().str.lower()
+    df_geo_valid['geolocation_state'] = df_geo_valid['geolocation_state'].astype(str).str.strip().str.upper()
 
-    # 4. Aggregate về grain 1 zip_code = 1 dòng (tránh hoàn toàn rủi ro row multiplication)
+    # 7. Aggregate về grain 1 zip_code = 1 dòng (tránh hoàn toàn rủi ro row multiplication)
     # Lấy median của tọa độ và mode (giá trị phổ biến nhất) của city/state
-    geo_agg = df_geo_clean.groupby('geolocation_zip_code_prefix').agg(
+    geo_agg = df_geo_valid.groupby('geolocation_zip_code_prefix').agg(
         geolocation_lat=('geolocation_lat', 'median'),
         geolocation_lng=('geolocation_lng', 'median'),
         geolocation_city=('geolocation_city', lambda x: x.mode()[0] if not x.empty else 'unknown'),
@@ -121,13 +135,17 @@ def clean_geolocation():
 
     out_path = os.path.join(PROCESSED_DATA_DIR, 'olist_geolocation_cleaned.csv')
     geo_agg.to_csv(out_path, index=False)
+    print(f"  -> Raw: {raw_count:,} rows")
+    print(f"  -> Dedup: {len(df_geo_dedup):,} rows (removed {dup_removed:,} duplicates)")
+    print(f"  -> Bounding box: {len(df_geo_valid):,} rows (removed {outliers_removed:,} outliers)")
+    print(f"  -> Missing zip: {missing_zip_count} rows (removed before aggregation)")
     print(f"  -> Saved aggregated geolocation to: {out_path} ({len(geo_agg):,} unique zip codes)")
 
     log_action(
         'Geolocation',
         raw_count,
         len(geo_agg),
-        f"Xóa {raw_count - len(df_geo_clean):,} dòng trùng/ngoại lai; Gom nhóm (group by) {len(geo_agg):,} zip code duy nhất (median lat/lng, mode city/state).",
+        f"Xóa {dup_removed:,} dòng trùng lặp 100%; Xóa {outliers_removed:,} tọa độ ngoại lai ngoài Brazil; Xóa {missing_zip_count} dòng thiếu zip code; Gom nhóm (group by) {len(geo_agg):,} zip code duy nhất (median lat/lng, mode city/state).",
         "Triệt tiêu hoàn toàn rủi ro nhân dòng (Row Multiplication) khi kết nối dữ liệu địa lý với Customers và Sellers."
     )
     return geo_agg
@@ -168,7 +186,20 @@ def clean_order_reviews():
     df_reviews['review_creation_date'] = pd.to_datetime(df_reviews['review_creation_date'], errors='coerce')
     df_reviews['review_answer_timestamp'] = pd.to_datetime(df_reviews['review_answer_timestamp'], errors='coerce')
 
-    # 2. Xử lý nhiều review cho 1 đơn hàng (Deduplication on order_id):
+        # 2. Xử lý nhiều review cho 1 đơn hàng (Deduplication on order_id):
+    # Log kiểm tra edge-case TRƯỚC KHI deduplicate
+    total_reviews = len(df_reviews)
+    null_timestamps = df_reviews['review_answer_timestamp'].isna().sum()
+    
+    # Kiểm tra orders có nhiều review cùng timestamp
+    duplicate_timestamps = df_reviews.groupby('order_id')['review_answer_timestamp'].apply(
+        lambda x: x.max() == x.min() and len(x) > 1
+    ).sum()
+    
+    print(f"[LOG] Tổng reviews: {total_reviews}")
+    print(f"[LOG] Reviews thiếu timestamp: {null_timestamps}")
+    print(f"[LOG] Orders có nhiều review cùng timestamp: {duplicate_timestamps}")
+    
     # Sắp xếp theo review_answer_timestamp mới nhất và giữ lại 1 review đại diện cuối cùng cho mỗi đơn hàng
     df_reviews_sorted = df_reviews.sort_values(by=['order_id', 'review_answer_timestamp'], ascending=[True, False])
     df_reviews_clean = df_reviews_sorted.drop_duplicates(subset=['order_id'], keep='first').copy()
@@ -307,27 +338,34 @@ def clean_orders_and_engineer_features():
     ).round(2)
 
     # 4. Gắn cờ trạng thái giao hàng (Delivery Status Flag)
-    # is_valid_delivered: 1 nếu đơn hàng giao thành công và có ngày giao thực tế hợp lệ (96,470 đơn)
+    # is_valid_delivered: 1 nếu đơn hàng giao thành công và có ngày giao thực tế hợp lệ
     df_orders['is_valid_delivered'] = np.where(
         (df_orders['order_status'] == 'delivered') & (df_orders['order_delivered_customer_date'].notna()),
         1,
         0
     )
 
-    # is_delayed: 1 nếu giao trễ (> 0 ngày) đối với đơn hàng hợp lệ; 0 nếu đúng hạn
-    # Lưu ý: Các đơn thiếu ngày giao hoặc chưa giao thì is_delayed = 0 nhưng có is_valid_delivered = 0.
-    # Mọi phân tích KPI vận chuyển phải lọc WHERE is_valid_delivered = 1 để tránh tính nhầm đơn thiếu ngày là đúng hạn.
+    # [SỬA LỖI 1] is_valid_delivery_delay: 1 nếu đơn đã giao VÀ có đủ CẢ ngày giao thực tế lẫn ngày dự kiến.
+    # Tránh trường hợp NaN > 0 trả về False khiến đơn thiếu ngày dự kiến bị tính nhầm là "đúng hạn".
+    df_orders['is_valid_delivery_delay'] = np.where(
+        (df_orders['is_valid_delivered'] == 1) & (df_orders['order_estimated_delivery_date'].notna()),
+        1,
+        0
+    )
+
+    # [SỬA LỖI 1] is_delayed: Chỉ tính trên các đơn có delay xác định (is_valid_delivery_delay == 1)
     df_orders['is_delayed'] = np.where(
-        (df_orders['is_valid_delivered'] == 1) & (df_orders['delivery_delay_days'] > 0),
+        (df_orders['is_valid_delivery_delay'] == 1) & (df_orders['delivery_delay_days'] > 0),
         1,
         0
     )
 
     # Nhóm thời gian giao hàng (Delivery Buckets) để phân tích trực quan
-    # Khi đơn hàng chưa giao thành công hợp lệ (is_valid_delivered == 0), delay_bucket = 'Not Delivered'
     def get_delay_bucket(row):
-        if row['is_valid_delivered'] == 0 or pd.isna(row['delivery_delay_days']):
-            return 'Not Delivered'
+        # [SỬA LỖI 1] Dùng is_valid_delivery_delay để loại bỏ cả những đơn thiếu ngày dự kiến
+        if row['is_valid_delivery_delay'] == 0:
+            return 'Not Delivered / Unknown Delay'
+        
         days = row['delivery_delay_days']
         if days <= 0:
             return 'On Time / Early'
@@ -363,7 +401,7 @@ def build_master_analytical_dataset(df_orders, df_items, df_prods, df_cust, df_s
             'order_id', 'customer_id', 'order_status', 'order_purchase_timestamp',
             'purchase_year', 'purchase_month', 'purchase_year_month', 'purchase_dayofweek',
             'actual_delivery_days', 'estimated_delivery_days', 'delivery_delay_days',
-            'is_delayed', 'is_valid_delivered', 'delay_bucket', 'seller_dispatch_days', 'carrier_delivery_days'
+            'is_delayed', 'is_valid_delivered', 'is_valid_delivery_delay', 'delay_bucket', 'seller_dispatch_days', 'carrier_delivery_days'
         ]],
         on='order_id',
         how='inner'
@@ -398,8 +436,26 @@ def build_master_analytical_dataset(df_orders, df_items, df_prods, df_cust, df_s
     )
 
     # 6. Tính toán cờ liên bang (Is Interstate: Seller và Customer khác bang nhau)
+    assert master[['customer_state', 'seller_state']].notna().all().all(), "Phát hiện giá trị thiếu trong customer_state hoặc seller_state trước khi tính is_interstate!"
     master['is_interstate'] = (master['customer_state'] != master['seller_state']).astype(int)
 
+    # [BƯỚC 1] KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY CHECK)
+        # [BƯỚC 1] KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY CHECK)
+    assert len(master) == len(df_items), "Lỗi: Master dataset bị mất hoặc nhân dòng so với Order Items!"
+    # Sửa lại: Kiểm tra trùng lặp theo cặp khóa chính (order_id, order_item_id)
+    assert not master[['order_id', 'order_item_id']].duplicated().any(), \
+        "Lỗi: Cặp khóa chính (order_id, order_item_id) bị trùng lặp trong master dataset!"
+    # [BỔ SUNG] Kiểm tra giá trị hợp lệ - dùng log cảnh báo thay vì assert cứng
+    # Vì dataset Olist gốc có ~157 dòng seller_dispatch_days âm (carrier nhận hàng trước khi khách đặt)
+    # nên actual_delivery_days có thể âm. Đây là anomaly của dữ liệu gốc, không phải lỗi pipeline.
+    negative_delivery_count = (master['actual_delivery_days'] < 0).sum()
+    if negative_delivery_count > 0:
+        print(f"[WARNING] Có {negative_delivery_count} dòng có actual_delivery_days âm (data anomaly từ Olist).")
+    
+    null_delay_count = master['delivery_delay_days'].isna().sum()
+    if null_delay_count > 0:
+        print(f"[WARNING] Có {null_delay_count} dòng thiếu delivery_delay_days.")
+    
     out_path = os.path.join(PROCESSED_DATA_DIR, 'olist_master_analytical_dataset.csv')
     master.to_csv(out_path, index=False)
     print(f"  -> Saved master analytical dataset to: {out_path} ({len(master):,} rows, {len(master.columns)} columns)")

@@ -146,26 +146,58 @@ ORDER BY total_revenue DESC;
 -- --------------------------------------------------------------------
 -- QUERY 4: PRODUCT CATEGORY PERFORMANCE & FREIGHT BURDEN
 -- Business Goal: Evaluate Revenue, Freight % of Gross Order Value, and ratings by category.
--- Methodology Note: Categories are item-level attributes. Aggregation is performed
--- directly at fact_order_items grain (item-level), weighting reviews and delays by
--- items sold in each category (consistent with Python category performance analysis).
+-- Methodology Note: Categories are item-level attributes. Financial metrics (Revenue, Freight, GOV)
+-- are aggregated at item level. Customer metrics (Avg Review Score, Delay Rate %) are calculated
+-- at Order-Level (deduplicated by order_id, category) to match DAX Measure #16 and Python EDA.
 -- Naming: Revenue = SUM(price), Gross Order Value = price + freight, Freight Ratio = freight / GOV
 -- --------------------------------------------------------------------
+WITH category_financials AS (
+    SELECT 
+        p.product_category_formatted AS category_name,
+        COUNT(f.order_item_id) AS items_sold,
+        SUM(f.price) AS total_revenue,
+        SUM(f.freight_value) AS total_freight,
+        SUM(f.item_total_value) AS gross_order_value
+    FROM fact_order_items f
+    JOIN dim_products p ON f.product_id = p.product_id
+    WHERE f.order_status = 'delivered'
+      AND f.is_valid_delivered = 1
+    GROUP BY p.product_category_formatted
+),
+category_orders AS (
+    -- Deduplicate về cấp (order_id, category) để tính avg_review và delay_rate ở order level (đồng bộ 100% với DAX & Python)
+    SELECT 
+        p.product_category_formatted AS category_name,
+        f.order_id,
+        f.review_score,
+        f.is_delayed
+    FROM fact_order_items f
+    JOIN dim_products p ON f.product_id = p.product_id
+    WHERE f.order_status = 'delivered'
+      AND f.is_valid_delivered = 1
+    GROUP BY p.product_category_formatted, f.order_id, f.review_score, f.is_delayed
+),
+category_order_kpis AS (
+    SELECT 
+        category_name,
+        COUNT(order_id) AS total_orders,
+        AVG(review_score) AS avg_review_score,
+        AVG(is_delayed) * 100.0 AS delay_rate_pct
+    FROM category_orders
+    GROUP BY category_name
+)
 SELECT 
-    p.product_category_formatted AS category_name,
-    COUNT(f.order_item_id) AS items_sold,
-    ROUND(SUM(f.price), 2) AS total_revenue,
-    ROUND(SUM(f.freight_value), 2) AS total_freight,
-    ROUND(SUM(f.item_total_value), 2) AS gross_order_value,
-    ROUND(SUM(f.freight_value) * 100.0 / SUM(f.item_total_value), 2) AS freight_pct_of_gov,
-    ROUND(AVG(f.review_score), 2) AS avg_review_score,
-    ROUND(AVG(f.is_delayed) * 100.0, 2) AS delay_rate_pct
-FROM fact_order_items f
-JOIN dim_products p ON f.product_id = p.product_id
-WHERE f.order_status = 'delivered'
-  AND f.is_valid_delivered = 1
-GROUP BY p.product_category_formatted
-ORDER BY total_revenue DESC
+    cf.category_name,
+    cf.items_sold,
+    ROUND(cf.total_revenue, 2) AS total_revenue,
+    ROUND(cf.total_freight, 2) AS total_freight,
+    ROUND(cf.gross_order_value, 2) AS gross_order_value,
+    ROUND(cf.total_freight * 100.0 / cf.gross_order_value, 2) AS freight_pct_of_gov,
+    ROUND(co.avg_review_score, 2) AS avg_review_score,
+    ROUND(co.delay_rate_pct, 2) AS delay_rate_pct
+FROM category_financials cf
+JOIN category_order_kpis co ON cf.category_name = co.category_name
+ORDER BY cf.total_revenue DESC
 LIMIT 15;
 
 
@@ -175,9 +207,11 @@ LIMIT 15;
 -- Methodological Notes:
 -- 1. Repeat Completed Buyer is defined as a customer with >= 2 delivered orders.
 -- 2. First order must be 'delivered' and have valid delivery date (is_valid_delivered = 1).
--- 3. SQL vs Python Sequence Grain: In SQL, order_date_key orders by date (day-grain). 
---    In Python, order_purchase_timestamp orders by exact timestamp (second-grain).
---    Both methodologies confirm a statistically significant ~16.0% relative drop in customer retention (p = 0.031).
+-- 3. SQL vs Python Sequence Alignment: Fact table includes order_purchase_timestamp, allowing
+--    exact second-grain chronological ordering partitioned by customer_unique_id with tie-break f.order_id ASC.
+--    This achieves 100% exact numerical match with Python:
+--    On-time first order retention = 3.04% (2,641 / 86,995), Delayed first order retention = 2.52% (160 / 6,355),
+--    representing a statistically significant 17.1% relative drop (Chi-Square with Yates correction: chi2 = 5.286, p = 0.0215).
 -- 4. Limitation (Right-Censoring): Olist dataset spans 2016-2018. Customers acquired
 --    near the end of the window had less opportunity to repeat purchase.
 -- --------------------------------------------------------------------

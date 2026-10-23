@@ -8,7 +8,7 @@
 | Table | Raw Rows | Cleaned Rows | Rows Delta | Actions Taken | Business Justification |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Products** | 32,951 | 32,951 | 0 | Dịch bổ sung 'pc_gamer' và 'portateis_cozinha...'; map tiếng Anh; fill 'unknown' cho 610 missing category; fill median cho kích thước/trọng lượng. | Đảm bảo 100% sản phẩm có danh mục hiển thị chuẩn tiếng Anh trên Dashboard và không có NaN kích thước làm lỗi thuật toán logistics. |
-| **Geolocation** | 1,000,163 | 19,010 | -981,153 | Xóa 261,864 dòng trùng/ngoại lai; Gom nhóm (group by) 19,010 zip code duy nhất (median lat/lng, mode city/state). | Triệt tiêu hoàn toàn rủi ro nhân dòng (Row Multiplication) khi kết nối dữ liệu địa lý với Customers và Sellers. |
+| **Geolocation** | 1,000,163 | 19,010 | -981,153 | Xóa 261,831 dòng trùng lặp 100%; Xóa 33 tọa độ ngoại lai ngoài Brazil; Xóa 0 dòng thiếu zip code; Gom nhóm (group by) 19,010 zip code duy nhất (median lat/lng, mode city/state). | Triệt tiêu hoàn toàn rủi ro nhân dòng (Row Multiplication) khi kết nối dữ liệu địa lý với Customers và Sellers. |
 | **Customers** | 99,441 | 99,441 | 0 | Chuẩn hóa định dạng Title Case cho City, Upper Case cho State code 2 ký tự. | Nhất quán dữ liệu hiển thị địa phương. |
 | **Sellers** | 3,095 | 3,095 | 0 | Chuẩn hóa định dạng Title Case cho City, Upper Case cho State code 2 ký tự. | Nhất quán dữ liệu hiển thị người bán. |
 | **Order Reviews** | 99,224 | 98,673 | -551 | Lọc bỏ 551 review trùng order_id (giữ review mới nhất theo timestamp); thêm cột satisfaction_tier; flag has_comment. | Ngăn chặn việc 1 order có nhiều review gây nhân dòng khi kết nối với bảng Orders. |

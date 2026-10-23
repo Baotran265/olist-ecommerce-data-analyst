@@ -5,41 +5,41 @@
 ![Power BI](https://img.shields.io/badge/Power%20BI-Interactive%20Dashboard-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
 ![Kaggle Dataset](https://img.shields.io/badge/Kaggle%20Dataset-Olist%20E--Commerce-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)
 
-Dự án phân tích dữ liệu toàn diện (End-to-End Data Analytics Portfolio) khai thác hành trình của gần **100.000 đơn hàng thực tế** (99.441 đơn hàng, 112.650 dòng sản phẩm) trên nền tảng thương mại điện tử Olist (Brazil). Dự án tập trung giải quyết bài toán: **Ảnh hưởng của sự chậm trễ vận chuyển (logistics delay) đối với mức độ hài lòng khách hàng (review score), tỷ lệ giữ chân khách hàng (retention rate), và nhận diện các rủi ro vận hành trong mạng lưới đối tác bán hàng (sellers).**
+Dự án phân tích dữ liệu toàn diện (End-to-End Data Analytics Project) khai thác hành trình của gần **100.000 đơn hàng thực tế** (99,441 đơn hàng, 112,650 dòng sản phẩm) trên nền tảng thương mại điện tử Olist (Brazil). Dự án tập trung giải quyết bài toán: **Ảnh hưởng của sự chậm trễ vận chuyển (logistics delay) đối với mức độ hài lòng khách hàng (review score), tỷ lệ giữ chân khách hàng (retention rate), và nhận diện các rủi ro vận hành trong mạng lưới đối tác bán hàng (sellers).**
 
 ---
 
 ## 📌 1. Bối Cảnh Nghiệp Vụ & Bài Toán Kinh Doanh
 
-Olist là sàn thương mại điện tử kết nối các doanh nghiệp vừa và nhỏ (SMBs) trên khắp Brazil với các sàn bán buôn lớn. Trong mô hình này, Olist không sở hữu kho hàng hay đội xe vận chuyển mà phụ thuộc vào đối tác bán hàng và bưu chính quốc gia (Correios). 
+Olist là sàn thương mại điện tử kết nối các doanh nghiệp vừa và nhỏ (SMBs) trên khắp Brazil. Trong mô hình này, Olist không sở hữu kho hàng hay đội xe vận chuyển mà phụ thuộc vào đối tác bán hàng và bưu chính quốc gia (Correios). 
 
 **Vấn đề cốt lõi:**
 * Địa lý Brazil rộng lớn với hạ tầng giao thông phân hóa mạnh giữa miền Nam/Đông Nam giàu có và miền Đông Bắc (Northeast) xa xôi.
-* Trải nghiệm giao hàng không đồng đều dẫn đến làn sóng đánh giá 1 sao (1-Star Reviews), gia tăng chi phí hỗ trợ khách hàng và làm suy giảm tỷ lệ khách hàng quay lại mua sắm (Repeat Purchase Rate).
+* Trải nghiệm giao hàng không đồng đều dẫn đến làn sóng đánh giá 1 sao, gia tăng chi phí hỗ trợ khách hàng và làm suy giảm tỷ lệ khách hàng quay lại mua sắm.
 
 ---
 
 ## 💡 2. 5 Phát Hiện Kinh Doanh Trọng Yếu (Executive Insights)
 
-Dựa trên việc làm sạch và phân tích **96.470 đơn hàng đã giao thành công hợp lệ** (loại bỏ 8 đơn delivered thiếu ngày giao thực tế) và **93.350 khách hàng duy nhất có đơn giao thành công** (96.096 khách hàng trên toàn sàn) giai đoạn 2016 – 2018:
+Dựa trên việc làm sạch và phân tích **96,470 đơn hàng đã giao thành công hợp lệ** (loại bỏ các đơn thiếu ngày giao thực tế hoặc ngày dự kiến) và **93,350 khách hàng duy nhất có đơn giao thành công** giai đoạn 2016 – 2018:
 
 1. **"Vực thẳm kiên nhẫn" (The Tolerance Cliff) tại ngày thứ 3:**
    * Khách hàng có xu hướng dễ tính với các đơn trễ nhẹ từ 1 – 3 ngày (điểm hài lòng trung bình đạt **3.29 ★** so với **4.29 ★** của đơn đúng hạn).
    * Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự kiên nhẫn hoàn toàn sụp đổ:** điểm đánh giá rớt thẳng đứng xuống **2.10 ★** (trễ 4–7 ngày) và chạm đáy **1.70 ★** (trễ > 7 ngày). Có tới **69.83% khách hàng chấm 1 sao** (tính trên tập đơn có đánh giá hợp lệ) khi đơn hàng trễ hơn 1 tuần.
-2. **Điểm nghẽn Logistics theo khu vực (Khu vực Đông Bắc & Rio de Janeiro):**
-   * Các bang thuộc vùng Đông Bắc chịu tỷ lệ giao trễ cao báo động: Alagoas (`AL`: **21.41%**), Maranhão (`MA`: **17.43%**), Sergipe (`SE`: **15.22%**), Piauí (`PI`: **13.87%**), Ceará (`CE`: **13.76%**), cao gấp 3–5 lần so với bang trung tâm kinh tế São Paulo (`SP`: **4.49%**). Bang Rio de Janeiro (`RJ`) thuộc vùng Đông Nam cũng có tỷ lệ trễ cao (**12.11%** trên 12.350 đơn).
+2. **Điểm nghẽn Logistics theo khu vực (Khu vực Đông Bắc):**
+   * Các bang thuộc vùng Đông Bắc chịu tỷ lệ giao trễ cao báo động: Alagoas (`AL`: **21.41%**), Maranhão (`MA`: **17.43%**), Sergipe (`SE`: **15.22%**), cao gấp 3–5 lần so với bang trung tâm kinh tế São Paulo (`SP`: **4.49%**).
    * Đơn hàng vận chuyển liên bang (Interstate) mất trung bình **15.1 ngày**, gần gấp đôi so với nội bang (**7.9 ngày**) và có tổng chi phí cước vận chuyển trung bình mỗi đơn cao hơn **75.5%** (26.94 R$ so với 15.35 R$).
 3. **Phát hiện 16 Đối tác Doanh thu cao nhưng Rủi ro lớn (High Revenue - High Risk Sellers):**
-   * Áp dụng chuẩn **Order-Deduplicated** (loại bỏ lặp trùng cấp sản phẩm), xác định được **16 sellers** (hoặc 21 sellers nếu tính theo trọng số dòng sản phẩm) đạt doanh thu vượt trội (> 15.000 R$) nhưng sở hữu điểm đánh giá trung bình dưới **3.8 ★**.
-   * Nhóm 16 seller này có tỷ lệ trễ bình quân trọng số là **9.47%** (trung bình đơn giản 14.11%, cá biệt seller `712e...` trễ tới **20.78%** và seller `b1b3...` trễ **64.29%** trên mẫu nhỏ 14 đơn) và thời gian chuẩn bị hàng (`seller_dispatch_days`) bình quân lên tới **7.0 ngày** (cá biệt seller `7c67...` mất 11.9 ngày).
+   * Áp dụng chuẩn **Order-Deduplicated** (loại bỏ lặp trùng cấp sản phẩm), xác định được **16 sellers** đạt doanh thu vượt trội (> 15,000 R$) nhưng sở hữu điểm đánh giá trung bình dưới **3.8 ★**.
+   * Nhóm này bao gồm 11 seller đủ cỡ mẫu (≥ 30 đơn) có tỷ lệ trễ bình quân trọng số là **9.00%** và thời gian chuẩn bị hàng (`seller_dispatch_days`) bình quân lên tới **7.0 ngày** (cá biệt có seller mất tới 11.9 ngày), cùng 5 seller cần theo dõi do cỡ mẫu nhỏ.
 4. **Tỷ lệ khách hàng mua lại hoàn tất (Repeat Completed Purchases): 3.00%:**
-   * Trong 93.350 khách hàng có đơn giao thành công hợp lệ, có **2.801 khách hàng** từng hoàn tất giao dịch lần thứ 2 trở lên (**3.00%**). Nếu tính trên mọi đơn đặt hàng ở mọi trạng thái (kể cả đơn hủy hoặc 775 đơn mồ côi không có sản phẩm), tỷ lệ này là **3.12%** (2.997 / 96.096 khách hàng).
-5. **Hiệu ứng đòn bẩy từ trải nghiệm đơn hàng đầu tiên (First-Order Leverage):**
-   * Khách hàng có đơn hàng đầu tiên bị giao trễ có tỷ lệ quay lại mua hàng thành công **giảm 17.1%** (từ 3.04% xuống chỉ còn 2.52%, kiểm định Chi-Square $\chi^2 = 5.29, p = 0.0219 < 0.05$) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
+   * Trong 93,350 khách hàng có đơn giao thành công hợp lệ, có **2,801 khách hàng** từng hoàn tất giao dịch lần thứ 2 trở lên (**3.00%**). 
+5. **Hiệu ứng đòn bẩy từ trải nghiệm đơn đầu tiên giao thành công (First Delivered Order Leverage):**
+   * Khách hàng có đơn hàng đầu tiên *giao thành công* bị trễ có tỷ lệ quay lại mua hàng thành công **giảm 17.1%** (từ 3.04% xuống chỉ còn 2.52%, kiểm định Chi-Square $p < 0.05$) so với những khách hàng nhận đơn đầu tiên đúng hẹn.
 
 > 📌 **Tính Liêm Chính Phương Pháp Luận (Methodological Notes):**
-> - **Giới hạn quan sát (Right-Censoring):** Tỷ lệ mua lại 3.00% được tính trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018). Những khách hàng gia nhập vào tháng 08/2018 có ít thời gian để quay lại mua sắm hơn khách hàng gia nhập năm 2017.
-> - **Tương quan (Correlation) vs Nhân quả (Causation):** Dữ liệu chứng minh sự liên hệ mạnh mẽ giữa giao trễ và điểm đánh giá thấp, tuy nhiên các yếu tố ngoại lai như chất lượng sản phẩm hay đóng gói cũng có thể ảnh hưởng. Các đề xuất can thiệp vận hành được định vị là **Giả thuyết kinh doanh cần kiểm chứng qua A/B Testing / Pilot Program**.
+> - **Giới hạn quan sát (Right-Censoring):** Tỷ lệ mua lại 3.00% được tính trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018). Những khách hàng gia nhập vào cuối giai đoạn có ít thời gian để quay lại mua sắm hơn.
+> - **Tương quan (Correlation) vs Nhân quả (Causation):** Dữ liệu chứng minh sự liên hệ mạnh mẽ giữa giao trễ và điểm đánh giá thấp. Các đề xuất can thiệp vận hành được định vị là **Giả thuyết kinh doanh cần kiểm chứng qua A/B Testing**.
 
 ---
 
@@ -53,27 +53,23 @@ Mô hình Dashboard được thiết kế theo tiêu chuẩn Business Intelligen
 ![Power BI Dashboard - Trang 1: Tổng Quan Điều Hành](powerbi/images/dashboard_page1_executive.png)
 
 * **Hàng KPI Cards:**
-  * **Tổng doanh thu giao dịch (Gross Order Value - GOV):** R$ 15.42M (bao gồm cước vận chuyển) / **Delivered Product Revenue:** R$ 13.22M.
-  * **Tổng đơn hàng:** 96.5K (96.470 đơn giao thành công hợp lệ) / 98.7K đơn trong mô hình Star Schema.
-  * **Tỷ lệ giao đúng hạn (On-Time Delivery Rate):** 93.2% (93.23% ở cấp Order-level, tương ứng 6.77% trễ; 93.41% ở cấp Item-level).
+  * **Tổng doanh thu giao dịch (Gross Order Value):** R$ 15.42M / **Delivered Product Revenue:** R$ 13.22M.
+  * **Tổng đơn hàng:** 96.5K (96,470 đơn giao thành công hợp lệ).
+  * **Tỷ lệ giao đúng hạn (On-Time Delivery Rate):** 93.2% (tương ứng 6.77% trễ ở cấp Order-level).
   * **Điểm đánh giá trung bình:** 4.16 ★ (trên đơn delivered hợp lệ).
-  * **Tỷ lệ khách hàng quay lại:** 3.00% (2.801 / 93.350 khách hàng có đơn delivered).
+  * **Tỷ lệ khách hàng quay lại:** 3.00% (2,801 / 93,350 khách hàng có đơn delivered).
 
-> 💡 **Ghi chú về Chuẩn Mẫu số & Grain Mismatch:** Tỷ lệ giao đúng hạn toàn quốc đạt **93.23%** (6.534 đơn trễ) trên **96.470 đơn hàng giao thành công có đầy đủ ngày giao thực tế**. Có 8 đơn hàng có trạng thái `delivered` nhưng thiếu ngày giao thực tế (`order_delivered_customer_date IS NULL`) đã được lọc tách riêng để không tính nhầm thành giao đúng hạn. Cột `order_estimated_delivery_date` luôn là `00:00:00` (midnight); pipeline sử dụng `dt.normalize()` để so sánh chuẩn xác theo ngày lịch (day-level).
-
-* **Xu hướng Thời gian (Trend Analysis):** Biểu đồ kết hợp cột và đường thể hiện diễn biến Doanh thu theo tháng so sánh với Tỷ lệ giao hàng trễ (Delay Rate %).
-* **Phân tích Vực thẳm kiên nhẫn (Delay Buckets vs Review):** Trực quan hóa điểm số đánh giá và tỷ lệ đơn 1 sao tương ứng với từng khoảng thời gian trễ (Đúng hẹn: 4.29 ★, 1–3 ngày: 3.29 ★, 4–7 ngày: 2.10 ★, > 7 ngày: 1.70 ★).
+> 💡 **Ghi chú về Chuẩn Mẫu số & Grain Mismatch:** Tỷ lệ giao đúng hạn toàn quốc đạt **93.23%** trên **96,470 đơn hàng giao thành công có đầy đủ ngày giao thực tế và ngày dự kiến**. Pipeline sử dụng cờ `is_valid_delivery_delay` để loại bỏ các đơn thiếu dữ liệu, tránh tính nhầm thành giao đúng hạn.
 
 ---
 
 ### 📄 Trang 2: Geographic Delivery Bottlenecks (Điểm Nghẽn Vận Chuyển Theo Địa Lý)
-> **Mục tiêu:** Bóc tách hiệu suất giao hàng theo từng bang của Brazil, phân tích tuyến giao hàng liên bang vs nội bang, xác định các điểm nghẽn cước phí và thời gian.
+> **Mục tiêu:** Bóc tách hiệu suất giao hàng theo từng bang của Brazil, phân tích tuyến giao hàng liên bang vs nội bang.
 
 ![Power BI Dashboard - Trang 2: Vận Chuyển & Địa Lý](powerbi/images/dashboard_page2_logistics.png)
 
-* **Bản đồ trực quan (Brazil Choropleth Map):** Trực quan hóa tỷ lệ giao trễ theo các bang, làm nổi bật điểm nóng tại dải bang Đông Bắc (AL 21.4%, MA 17.4%, SE 15.2%). *(Lưu ý: trong Power BI Desktop, cấu hình Data Category của cột Bang là State or Province và bổ sung cột Country = "Brazil" hoặc sử dụng Shape Map TopoJSON Brazil để tránh Power BI nhận diện nhầm mã bang AL, MA sang các bang của Hoa Kỳ).*
+* **Bản đồ trực quan (Brazil Choropleth Map):** Trực quan hóa tỷ lệ giao trễ theo các bang, làm nổi bật điểm nóng tại dải bang Đông Bắc (AL 21.4%, MA 17.4%, SE 15.2%). 
 * **So sánh Vận chuyển (Intrastate vs Interstate):** Đo lường sự chênh lệch rõ rệt về thời gian vận chuyển thực tế (7.9 ngày vs 15.1 ngày) và gánh nặng chi phí cước ship (15.35 R$ vs 26.94 R$).
-* **Ma trận Logistics theo Bang:** Bảng tổng hợp chi tiết Số lượng đơn hàng, Thời gian giao thực tế, Tỷ lệ trễ hạn và Điểm đánh giá tương ứng cho từng khu vực.
 
 ---
 
@@ -82,17 +78,15 @@ Mô hình Dashboard được thiết kế theo tiêu chuẩn Business Intelligen
 
 ![Power BI Dashboard - Trang 3: Quản Trị Đối Tác & Ngành Hàng](powerbi/images/dashboard_page3_seller.png)
 
-* **Ma trận Rủi ro Người bán (Seller Risk Scatter Plot):** Trục X = Doanh thu người bán (R$), Trục Y = Điểm đánh giá trung bình. Phân loại rõ nhóm *Star Sellers* (Doanh thu cao, Đánh giá cao) và nhóm *High Risk - Audit Required* (Góc dưới bên phải: Doanh thu cao, Đánh giá kém < 3.8 ★).
-* **Top Ngành hàng hàng đầu:** Xếp hạng doanh thu kèm theo tỷ lệ cước phí vận chuyển trên giá trị đơn hàng (% Freight Ratio). Dẫn đầu doanh thu: `Health Beauty` (R$ 1.23M), `Watches Gifts` (R$ 1.17M), `Bed Bath Table` (R$ 1.02M).
-* **Bảng Hành động Đối tác (Seller Action Table):** Liệt kê chi tiết mã Seller, thành phố, bang, doanh thu, thời gian chuẩn bị hàng (`seller_dispatch_days`), tỷ lệ trễ và trạng thái rủi ro.
-
-> 📖 **Xem hướng dẫn công thức DAX:** [powerbi/dax_measures_and_model_guide.md](powerbi/dax_measures_and_model_guide.md) (Gồm **23 DAX Measures** chuẩn hóa, xử lý triệt để Grain Mismatch và đồng bộ 100% với Python & SQL).
+* **Ma trận Rủi ro Người bán (Seller Risk Scatter Plot):** Trục X = Doanh thu người bán (R$), Trục Y = Điểm đánh giá trung bình. Phân loại rõ nhóm *Star Sellers* và nhóm *High Risk - Audit Required* (Góc dưới bên phải: Doanh thu cao, Đánh giá kém < 3.8 ★).
+* **Top Ngành hàng hàng đầu:** Dẫn đầu doanh thu: `Health Beauty` (R$ 1.23M), `Watches Gifts` (R$ 1.17M), `Bed Bath Table` (R$ 1.02M).
+* **Bảng Hành động Đối tác (Seller Action Table):** Liệt kê chi tiết mã Seller, thành phố, doanh thu, thời gian chuẩn bị hàng, tỷ lệ trễ và trạng thái rủi ro.
 
 ---
 
 ## 🏛️ 4. Kiến Trúc Mô Hình Dữ Liệu Star Schema (Kimball Methodology)
 
-Toàn bộ dữ liệu sau khi làm sạch đã được chuyển đổi thành mô hình **Kimball Star Schema** chuẩn mực để phục vụ trực tiếp cho cơ sở dữ liệu phân tích và Power BI:
+Toàn bộ dữ liệu sau khi làm sạch đã được chuyển đổi thành mô hình **Kimball Star Schema** chuẩn mực:
 
 ```mermaid
 erDiagram
@@ -100,40 +94,11 @@ erDiagram
     dim_customers ||--o{ fact_order_items : "customer_id"
     dim_sellers ||--o{ fact_order_items : "seller_id"
     dim_products ||--o{ fact_order_items : "product_id"
-
-    fact_order_items {
-        text order_id PK
-        int order_item_id PK
-        text product_id FK
-        text seller_id FK
-        text customer_id FK
-        int order_date_key FK
-        text order_purchase_timestamp
-        text order_status
-        numeric price
-        numeric freight_value
-        numeric item_total_value
-        numeric actual_delivery_days
-        numeric delivery_delay_days
-        int is_delayed
-        int is_valid_delivered
-        text delay_bucket
-        numeric seller_dispatch_days
-        numeric carrier_delivery_days
-        numeric review_score
-        text satisfaction_tier
-        int has_comment
-        int is_interstate
-    }
 ```
 
-* **Bảng Fact:** `fact_order_items` (112.650 dòng, 23 cột; Grain = 1 sản phẩm trong 1 đơn hàng).
-* **Các bảng Dimension:**
-  * `dim_customers`: 99.441 dòng (Quản lý khách hàng, định danh khách hàng duy nhất `customer_unique_id`, vị trí địa lý).
-  * `dim_sellers`: 3.095 dòng (Quản lý người bán, thành phố, bang, vị trí địa lý).
-  * `dim_products`: 32.951 dòng (Thông tin danh mục sản phẩm dịch thuật tiếng Anh chuẩn hóa, kích thước, trọng lượng).
-  * `dim_date`: 1.096 dòng (Bảng ngày chuẩn hóa từ 2016 đến 2018 với khóa nguyên `YYYYMMDD` và cột `year_quarter`).
-* **Kỹ thuật xử lý Grain Mismatch trong DAX:** Do `review_score` và các trường vận chuyển (`actual_delivery_days`) là dữ liệu ở cấp độ đơn hàng (`order-level`), nhưng bảng Fact lại có độ chi tiết là cấp độ sản phẩm (`item-level`), toàn bộ các measure tính trung bình đều sử dụng công thức Grain-Safe:
+* **Bảng Fact:** `fact_order_items` (112,650 dòng, Grain = 1 sản phẩm trong 1 đơn hàng).
+* **Các bảng Dimension:** `dim_customers` (99,441 dòng), `dim_sellers` (3,095 dòng), `dim_products` (32,951 dòng), `dim_date` (1,096 dòng).
+* **Kỹ thuật xử lý Grain Mismatch trong DAX:** Do `review_score` là dữ liệu ở cấp độ đơn hàng (`order-level`), nhưng bảng Fact lại có độ chi tiết là cấp độ sản phẩm (`item-level`), toàn bộ các measure tính trung bình đều sử dụng công thức Grain-Safe:
   ```dax
   Avg Review Score Delivered = 
   AVERAGEX(
@@ -142,17 +107,16 @@ erDiagram
               fact_order_items, 
               fact_order_items[order_id], 
               fact_order_items[order_status],
-              fact_order_items[is_valid_delivered],
+              fact_order_items[is_valid_delivery_delay],
               fact_order_items[review_score]
           ),
           fact_order_items[order_status] = "delivered" && 
-          fact_order_items[is_valid_delivered] = 1 &&
+          fact_order_items[is_valid_delivery_delay] = 1 &&
           NOT(ISBLANK(fact_order_items[review_score]))
       ),
       fact_order_items[review_score]
   )
   ```
-  *(Tham khảo chi tiết tại [docs/07_data_modeling_and_star_schema.md](docs/07_data_modeling_and_star_schema.md)).*
 
 ---
 
@@ -173,7 +137,7 @@ Bộ biểu đồ khoa học được sinh tự động bằng Seaborn/Matplotli
 | Hình 5: Ảnh Hưởng Đến Tỷ Lệ Giữ Chân Khách Hàng |
 | :---: |
 | ![Customer Retention](outputs/figures/fig5_customer_retention_and_first_order_impact.png) |
-| *Đơn đầu tiên bị trễ làm giảm 17.1% tỷ lệ khách hàng quay lại (p=0.0219)* |
+| *Đơn đầu tiên giao thành công bị trễ làm giảm 17.1% tỷ lệ khách hàng quay lại* |
 
 ---
 
@@ -198,9 +162,9 @@ olist-ecommerce-data-analyst/
 │   └── 01_eda_and_insights.ipynb      # Jupyter Notebook tương tác chứa code & biểu đồ EDA
 ├── outputs/
 │   ├── figures/             # 5 biểu đồ chất lượng cao phục vụ báo cáo (300 DPI)
-│   └── tables/              # 9 bảng thống kê kết quả phân tích định lượng (.csv)
+│   └── tables/              # 5 bảng thống kê kết quả phân tích định lượng (.csv)
 ├── powerbi/
-│   ├── dax_measures_and_model_guide.md # Hướng dẫn 23 công thức DAX Measures & mô hình
+│   ├── dax_measures_and_model_guide.md # Hướng dẫn công thức DAX Measures & mô hình
 │   └── images/              # Ảnh chụp màn hình 3 trang Power BI Dashboard
 ├── sql/
 │   ├── 01_create_star_schema.sql      # Script DDL khởi tạo 5 bảng & 7 Performance Indexes
@@ -249,8 +213,6 @@ python src/04_exploratory_data_analysis.py# Phân tích thống kê & Vẽ biể
 python src/05_build_star_schema.py        # Xây dựng Star Schema & nạp SQLite DB
 ```
 
-> ⚠️ **Lưu ý:** Các script phải được chạy theo thứ tự vì đầu ra của mỗi bước là đầu vào của bước tiếp theo.
-
 ---
 
 ## 🛠️ 8. Bộ Công Nghệ Ứng Dụng (Tech Stack)
@@ -262,3 +224,4 @@ python src/05_build_star_schema.py        # Xây dựng Star Schema & nạp SQLi
 * **Kiến trúc Dữ liệu:** `Ralph Kimball Dimensional Modeling` (Star Schema, Fact-Dimension Separation, Grain Management)
 * **Kiểm định Thống kê:** `Scipy.stats` (Chi-Square Test of Independence)
 * **Quản lý Mã nguồn:** `Git`, `GitHub`
+```

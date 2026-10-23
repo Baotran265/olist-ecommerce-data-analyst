@@ -131,6 +131,7 @@ def build_fact_order_items():
         'delivery_delay_days',
         'is_delayed',
         'is_valid_delivered',
+        'is_valid_delivery_delay',  # <-- DÒNG MỚI THÊM VÀO
         'delay_bucket',
         'seller_dispatch_days',
         'carrier_delivery_days',

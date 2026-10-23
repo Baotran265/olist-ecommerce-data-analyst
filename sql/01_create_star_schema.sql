@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS fact_order_items (
     delivery_delay_days FLOAT,                -- Customer delivered - Estimated (>0 = late)
     is_delayed INT NOT NULL,                  -- 1 if delivery_delay_days > 0 else 0
     is_valid_delivered INT NOT NULL,          -- 1 if status = 'delivered' and delivered_date is not null
-    delay_bucket VARCHAR(30) NOT NULL,        -- 'On Time / Early', '1-3 Days Late', etc.
+    is_valid_delivery_delay INTEGER,  
+	delay_bucket VARCHAR(30) NOT NULL,        -- 'On Time / Early', '1-3 Days Late', etc.
     seller_dispatch_days FLOAT,               -- Carrier date - Purchased
     carrier_delivery_days FLOAT,              -- Customer delivered - Carrier date
     

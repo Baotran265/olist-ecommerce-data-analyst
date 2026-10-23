@@ -61,7 +61,7 @@ def analyze_delivery_delay_vs_satisfaction(df):
     # Lọc bỏ 8 đơn delivered bị thiếu ngày giao hàng thực tế (delay_bucket = 'Not Delivered')
     # Mẫu số đơn hàng có ngày giao hợp lệ là 96,470 đơn
     bucket_order = ['On Time / Early', '1-3 Days Late', '4-7 Days Late', '> 7 Days Late']
-    deliv_valid = deliv[deliv['delay_bucket'].isin(bucket_order)].copy()
+    deliv_valid = df[df['is_valid_delivery_delay'] == 1].drop_duplicates(subset=['order_id']).copy()
 
     # Thống kê theo delay bucket (mẫu số % review tính trên các đơn có review hợp lệ, tương ứng SQL Query 1)
     bucket_stats = deliv_valid.groupby('delay_bucket').agg(
@@ -116,10 +116,11 @@ def analyze_delivery_delay_vs_satisfaction(df):
 def analyze_geographic_bottlenecks(df):
     print("--- [Question 2] Geographic Bottlenecks & Interstate Delivery ---")
     # Lọc đơn giao thành công hợp lệ (có ngày giao thực tế - 96,470 đơn)
-    deliv_valid = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
-
-    # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate) ở cấp độ ĐƠN HÀNG (Order-level)
+    deliv_valid = df[df['is_valid_delivery_delay'] == 1].copy()
+        # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate) ở cấp độ ĐƠN HÀNG (Order-level)
     # Tính tổng cước phí mỗi đơn (thay vì lấy ngẫu nhiên 1 sản phẩm) để phản ánh đúng gánh nặng cước ship
+    # LƯU Ý: is_interstate dùng max() nên nếu đơn có nhiều sản phẩm và ít nhất 1 sản phẩm liên bang, 
+    # đơn đó được phân loại là "Interstate". Đây là phân loại ở cấp đơn hàng.
     order_routes = deliv_valid.groupby('order_id').agg(
         is_interstate=('is_interstate', 'max'),
         total_order_freight=('freight_value', 'sum'),
@@ -169,7 +170,7 @@ def analyze_geographic_bottlenecks(df):
     ax1.set_yticks(y_pos)
     ax1.set_yticklabels(plot_states['customer_state'], fontsize=11, fontweight='bold')
     ax1.set_xlabel('Delivery Delay Rate (% of orders arriving late)', fontsize=11)
-    ax1.set_title('Geographic Delivery Bottlenecks: Top Delayed States vs Best Performing States\n(Northeast states lead delay: AL 21.4%, MA 17.4%, SE 15.2%; Southeast: RJ 12.1%, SP 4.5%)',
+    ax1.set_title('Delivery Performance by Customer State\n(Regional Bottlenecks & Interstate vs Intrastate Analysis)',
                   fontsize=13, fontweight='bold', pad=15)
     ax1.axvline(order_routes['is_delayed'].mean() * 100, color='black', linestyle='--', label=f"National Avg Delay: {order_routes['is_delayed'].mean()*100:.1f}%")
 
@@ -192,8 +193,7 @@ def analyze_geographic_bottlenecks(df):
 def analyze_seller_risk_matrix(df):
     print("--- [Question 3] Seller Risk Matrix (High Revenue - Low Satisfaction) ---")
     # Lọc đơn giao thành công hợp lệ (có ngày giao thực tế)
-    deliv = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
-
+    deliv = df[df['is_valid_delivery_delay'] == 1].copy()
     # Grain-Safe: Deduplicate về cấp seller-order để phản ánh đúng trải nghiệm của từng đơn hàng
     seller_orders = deliv.groupby(['seller_id', 'order_id']).agg(
         order_rev=('price', 'sum'),
@@ -203,10 +203,13 @@ def analyze_seller_risk_matrix(df):
         seller_dispatch_days=('seller_dispatch_days', 'mean')
     ).reset_index()
 
+    # LƯU Ý: total_revenue được tính từ price của các đơn GIAO THÀNH CÔNG HỢP LỆ (is_valid_delivery_delay == 1),
+    # không phải toàn bộ doanh số của seller trong mọi trạng thái đơn hàng.
     seller_stats = seller_orders.groupby('seller_id').agg(
         total_revenue=('order_rev', 'sum'),
         items_sold=('items_count', 'sum'),
         orders_count=('order_id', 'count'),
+        valid_reviews_count=('review_score', lambda s: s.notna().sum()), 
         avg_review=('review_score', 'mean'),
         delay_rate=('is_delayed', lambda s: s.mean() * 100),
         avg_dispatch_days=('seller_dispatch_days', 'mean')
@@ -218,16 +221,26 @@ def analyze_seller_risk_matrix(df):
     REVIEW_HIGH_THRESHOLD = 4.2
 
     seller_stats['volume_tier'] = np.where(seller_stats['orders_count'] >= 30, 'Significant Volume (>= 30 orders)', 'Low Sample (< 30 orders)')
+    
+    # [SỬA LỖI 2.2] Khởi tạo quadrant mặc định
     seller_stats['quadrant'] = 'Normal (< 15k R$)'
-    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_LOW_THRESHOLD), 'quadrant'] = 'High Risk (Intervene)'
-    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_LOW_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Standard High-Volume'
-    seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Star Sellers (Top Performers)'
+    
+    # Xử lý trường hợp thiếu review (Không thể đánh giá rủi ro)
+    seller_stats.loc[seller_stats['avg_review'].isna(), 'quadrant'] = 'No Reviews - Insufficient Data'
+    
+    # Chỉ gán nhãn rủi ro cho seller có review hợp lệ
+    has_review = seller_stats['avg_review'].notna()
+    
+    seller_stats.loc[has_review & (seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_LOW_THRESHOLD) & (seller_stats['orders_count'] >= 30), 'quadrant'] = 'High Risk - Intervene'
+    seller_stats.loc[has_review & (seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_LOW_THRESHOLD) & (seller_stats['orders_count'] < 30), 'quadrant'] = 'Potential Risk - Monitor (Low Sample)'
+    seller_stats.loc[has_review & (seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_LOW_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Standard High-Volume'
+    seller_stats.loc[has_review & (seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Star Sellers (Top Performers)'
 
-    high_risk_sellers = seller_stats[seller_stats['quadrant'] == 'High Risk (Intervene)'].sort_values(by='total_revenue', ascending=False)
+    high_risk_sellers = seller_stats[seller_stats['quadrant'].isin(['High Risk - Intervene', 'Potential Risk - Monitor (Low Sample)'])].sort_values(by='total_revenue', ascending=False)
     high_risk_sellers.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q3_high_risk_sellers.csv'), index=False)
-    print(f"Identified {len(high_risk_sellers)} High Risk sellers (Order-deduplicated standard).")
-    print(f"  -> With Significant Volume (>= 30 orders): {len(high_risk_sellers[high_risk_sellers['orders_count'] >= 30])}")
-    print(f"  -> Low Sample Size (< 30 orders): {len(high_risk_sellers[high_risk_sellers['orders_count'] < 30])}")
+    print(f"Identified {len(high_risk_sellers)} total candidate risk sellers (Order-deduplicated standard):")
+    print(f"  -> High Risk - Intervene (>= 30 orders): {len(seller_stats[seller_stats['quadrant'] == 'High Risk - Intervene'])}")
+    print(f"  -> Potential Risk - Monitor (Low Sample < 30 orders): {len(seller_stats[seller_stats['quadrant'] == 'Potential Risk - Monitor (Low Sample)'])}")
 
     fig, ax = plt.subplots(figsize=(12, 7))
 
@@ -241,7 +254,9 @@ def analyze_seller_risk_matrix(df):
             'Normal (< 15k R$)': '#d9d9d9',
             'Standard High-Volume': PRIMARY_COLOR,
             'Star Sellers (Top Performers)': ACCENT_GREEN,
-            'High Risk (Intervene)': ACCENT_RED
+            'High Risk - Intervene': ACCENT_RED,
+            'Potential Risk - Monitor (Low Sample)': '#ff9896',
+            'No Reviews - Insufficient Data': NEUTRAL_GRAY  # <-- DÒNG MỚI THÊM VÀO
         },
         alpha=0.8,
         s=60,
@@ -276,19 +291,34 @@ def analyze_seller_risk_matrix(df):
 # ==========================================
 def analyze_category_performance(df):
     print("--- [Question 4] Product Category Performance Matrix ---")
-    deliv = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
+    deliv = df[df['is_valid_delivery_delay'] == 1].copy()
+    # [SỬA LỖI 2.3] NOTE ON GRAIN: Order-Category Level Analysis
+    # We are analyzing at the 'Order-Category' level. 
+    # If an order contains items from multiple categories, the order's review score 
+    # is attributed to EACH category present in the order. 
+    # This answers: "How do customers rate orders containing products from Category X?"
+    # It does NOT answer: "What is the average review of Category X items?" (which would require item-level).
+    # Using 'first' for review_score is safe here because review is at order level (already deduplicated).
+    
+    order_cat = deliv.groupby(['order_id', 'product_category_formatted']).agg(
+        review_score=('review_score', 'first'),
+        is_delayed=('is_delayed', 'max')
+    ).reset_index()
 
-    # 1. Tính toán an toàn, chuẩn xác và tận dụng C-engine của Pandas (Tránh lambda closure trên deliv.loc)
-    cat_stats = deliv.groupby('product_category_formatted').agg(
+    cat_rev_delay = order_cat.groupby('product_category_formatted').agg(
+        avg_review=('review_score', 'mean'),
+        delay_rate=('is_delayed', lambda s: s.mean() * 100),
+        order_count=('order_id', 'count')
+    ).reset_index()
+
+    cat_fin = deliv.groupby('product_category_formatted').agg(
         total_revenue=('price', 'sum'),
         total_freight=('freight_value', 'sum'),
         total_item_value=('item_total_value', 'sum'),
-        items_sold=('order_item_id', 'count'),
-        avg_review=('review_score', 'mean'),
-        delay_rate=('is_delayed', lambda s: s.mean() * 100)
+        items_sold=('order_item_id', 'count')
     ).reset_index()
 
-    # 2. Tính phần trăm cước phí vận chuyển (Vectorized calculation)
+    cat_stats = cat_fin.merge(cat_rev_delay, on='product_category_formatted')
     cat_stats['freight_pct_of_total'] = ((cat_stats['total_freight'] / cat_stats['total_item_value']) * 100).round(2)
     cat_stats = cat_stats.sort_values(by='total_revenue', ascending=False)
 
@@ -305,7 +335,7 @@ def analyze_category_performance(df):
     ax1.set_yticks(y_pos)
     ax1.set_yticklabels(top12['product_category_formatted'], fontsize=11)
     ax1.set_xlabel('Total Revenue (Thousands R$)', fontsize=11)
-    ax1.set_title('Top 12 Product Categories by Revenue with Average Customer Rating\n(Watches & Gifts and Health/Beauty lead sales with strong satisfaction)',
+    ax1.set_title('Top 12 Product Categories by Revenue with Average Customer Rating',
                   fontsize=13, fontweight='bold', pad=15)
 
     for bar, (_, row) in zip(bars, top12.iterrows()):
@@ -340,7 +370,7 @@ def analyze_customer_retention(df):
 
     # 2. Định nghĩa 2: Repeat Completed Purchases (Chỉ tính đơn giao thành công hợp lệ từ master dataset/star schema)
     # Deduplicate về cấp đơn hàng (Order Level) để phản ánh đúng từng giao dịch
-    deliv_valid = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
+    deliv_valid = df[df['is_valid_delivery_delay'] == 1].copy()    
     deliv_orders = deliv_valid.drop_duplicates(subset=['order_id']).copy()
     deliv_order_counts = deliv_orders.groupby('customer_unique_id')['order_id'].nunique()
     total_cust_deliv = len(deliv_order_counts)
@@ -348,8 +378,9 @@ def analyze_customer_retention(df):
     repeat_deliv_count = len(repeat_deliv_ids)
     repeat_deliv_pct = (repeat_deliv_count / total_cust_deliv) * 100
 
-    print(f"Total Unique Customers (All Statuses): {total_cust_all:,} | Repeat Orders Placed: {repeat_all_count:,} ({repeat_all_pct:.2f}%)")
-    print(f"Total Unique Customers (Delivered Only): {total_cust_deliv:,} | Repeat Completed Purchases: {repeat_deliv_count:,} ({repeat_deliv_pct:.2f}%)")
+      # MỚI (Copy và dán 2 dòng này vào đúng vị trí vừa xóa):
+    print(f"Total Unique Customers (All Statuses): {total_cust_all:,} | Repeat Orders Placed (toàn bộ kỳ quan sát): {repeat_all_count:,} ({repeat_all_pct:.2f}%)")
+    print(f"Total Unique Customers (Delivered Only): {total_cust_deliv:,} | Repeat Completed Purchases (toàn bộ kỳ quan sát): {repeat_deliv_count:,} ({repeat_deliv_pct:.2f}%)")
 
     # Xác định đơn hàng đầu tiên (First Order) của từng khách hàng theo timestamp mua hàng
     deliv_sorted = deliv_orders.sort_values(by=['customer_unique_id', 'order_purchase_timestamp'])
@@ -362,7 +393,7 @@ def analyze_customer_retention(df):
         repeat_rate=('is_repeat_customer', lambda s: s.mean() * 100)
     ).reset_index()
 
-    retention_by_delay['status_label'] = retention_by_delay['is_delayed'].map({0: '1st Order On-Time', 1: '1st Order Delayed'})
+    retention_by_delay['status_label'] = retention_by_delay['is_delayed'].map({0: '1st Delivered Order: On-Time', 1: '1st Delivered Order: Delayed'})    
     retention_by_delay.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q5_retention_by_first_order_delay.csv'), index=False)
     print("Impact of 1st Order Delivery on Repeat Completed Purchases:")
     print(retention_by_delay)
@@ -385,7 +416,15 @@ def analyze_customer_retention(df):
     print(f"\nStatistical Significance Test (Chi-Square):")
     print(f"Chi2: {chi2:.4f}, p-value: {p_val:.4e} (p < 0.05: {p_val < 0.05})")
     print(f"Absolute drop: {abs_drop:.2f} percentage points ({on_time_rate:.2f}% -> {delayed_rate:.2f}%)")
-    print(f"Relative drop: {drop_pct:.1f}%\n")
+    print(f"Relative drop: {drop_pct:.1f}%")
+    
+    # [SỬA LỖI 2.4] Disclaimer về Observation Window Bias
+    print(f"\n[NOTE ON METHODOLOGY - OBSERVATION WINDOW BIAS]")
+    print(f"This analysis shows correlation within the dataset's observation period (2016-2018).")
+    print(f"Customers with delayed first orders occurring late in the dataset have less time")
+    print(f"to make a second purchase. Therefore, the {drop_pct:.1f}% relative drop may slightly")
+    print(f"overstate the true causal impact. This should be treated as a strong hypothesis")
+    print(f"requiring further validation via Cohort Analysis or A/B Testing.\n")
 
     # Trực quan hóa
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
@@ -407,7 +446,7 @@ def analyze_customer_retention(df):
     # Subplot 2: Tác động của trải nghiệm giao hàng đơn đầu đến việc quay lại mua
     bars = ax2.bar(retention_by_delay['status_label'], retention_by_delay['repeat_rate'],
                    color=[ACCENT_GREEN, ACCENT_RED], width=0.45, edgecolor='black', linewidth=0.5)
-    ax2.set_title(f'Impact of 1st Order Delivery on Customer Retention\n({drop_pct:.1f}% relative drop in repeat purchase rate if 1st order is delayed)',
+    ax2.set_title(f'Impact of 1st Delivered Order Experience on Retention\n({drop_pct:.1f}% relative drop if 1st delivered order is delayed)',
                   fontsize=12, fontweight='bold', pad=15)
     ax2.set_ylabel('Repeat Purchase Rate (%)', fontsize=11)
     ax2.set_ylim(0, 4.2)
