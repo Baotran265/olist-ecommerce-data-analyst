@@ -121,6 +121,7 @@ def build_fact_order_items():
         'seller_id',
         'product_id',
         'order_date_key',
+        'order_purchase_timestamp',
         'order_status',
         'price',
         'freight_value',

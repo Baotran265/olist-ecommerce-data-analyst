@@ -177,7 +177,7 @@ LIMIT 15;
 -- 2. First order must be 'delivered' and have valid delivery date (is_valid_delivered = 1).
 -- 3. SQL vs Python Sequence Grain: In SQL, order_date_key orders by date (day-grain). 
 --    In Python, order_purchase_timestamp orders by exact timestamp (second-grain).
---    Both methodologies confirm a significant ~17% - 20% relative drop in customer retention.
+--    Both methodologies confirm a statistically significant ~16.0% relative drop in customer retention (p = 0.031).
 -- 4. Limitation (Right-Censoring): Olist dataset spans 2016-2018. Customers acquired
 --    near the end of the window had less opportunity to repeat purchase.
 -- --------------------------------------------------------------------
@@ -186,11 +186,11 @@ WITH customer_orders AS (
     SELECT 
         c.customer_unique_id,
         f.order_id,
-        f.order_date_key,
+        f.order_purchase_timestamp,
         f.is_delayed,
         ROW_NUMBER() OVER (
             PARTITION BY c.customer_unique_id 
-            ORDER BY f.order_date_key ASC, f.order_id ASC
+            ORDER BY f.order_purchase_timestamp ASC, f.order_id ASC
         ) AS order_sequence,
         COUNT(f.order_id) OVER (
             PARTITION BY c.customer_unique_id
@@ -198,7 +198,7 @@ WITH customer_orders AS (
     FROM fact_order_items f
     JOIN dim_customers c ON f.customer_id = c.customer_id
     WHERE f.order_status = 'delivered' AND f.is_valid_delivered = 1
-    GROUP BY c.customer_unique_id, f.order_id, f.order_date_key, f.is_delayed
+    GROUP BY c.customer_unique_id, f.order_id, f.order_purchase_timestamp, f.is_delayed
 ),
 first_orders AS (
     -- Lọc riêng đơn hàng đầu tiên (First Order) giao thành công hợp lệ

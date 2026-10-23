@@ -58,12 +58,16 @@ def clean_products_and_translations():
     df_prods_clean['product_category_name'] = df_prods_clean['product_category_name'].fillna('unknown')
     df_prods_clean['product_category_name_english'] = df_prods_clean['product_category_name_english'].fillna('unknown')
 
-    # Chuẩn hóa tên category tiếng Anh (thay '_' bằng khoảng trắng, viết hoa chuẩn)
     df_prods_clean['product_category_formatted'] = df_prods_clean['product_category_name_english'].str.replace('_', ' ').str.title()
     title_replacements = {
         'Pc Gamer': 'PC Gamer',
         'Cds Dvds Musicals': 'CDs / DVDs / Musicals',
-        'Kitchen And Food Processors': 'Kitchen & Food Processors'
+        'Kitchen And Food Processors': 'Kitchen & Food Processors',
+        'Costruction Tools Garden': 'Construction Tools Garden',
+        'Costruction Tools Tools': 'Construction Tools Tools',
+        'Fashio Female Clothing': 'Fashion Female Clothing',
+        'Home Confort': 'Home Comfort',
+        'Home Confort 2': 'Home Comfort 2'
     }
     df_prods_clean['product_category_formatted'] = df_prods_clean['product_category_formatted'].replace(title_replacements)
 
@@ -320,10 +324,12 @@ def clean_orders_and_engineer_features():
     )
 
     # Nhóm thời gian giao hàng (Delivery Buckets) để phân tích trực quan
-    def get_delay_bucket(days):
-        if pd.isna(days):
+    # Khi đơn hàng chưa giao thành công hợp lệ (is_valid_delivered == 0), delay_bucket = 'Not Delivered'
+    def get_delay_bucket(row):
+        if row['is_valid_delivered'] == 0 or pd.isna(row['delivery_delay_days']):
             return 'Not Delivered'
-        elif days <= 0:
+        days = row['delivery_delay_days']
+        if days <= 0:
             return 'On Time / Early'
         elif days <= 3:
             return '1-3 Days Late'
@@ -332,7 +338,7 @@ def clean_orders_and_engineer_features():
         else:
             return '> 7 Days Late'
 
-    df_orders['delay_bucket'] = df_orders['delivery_delay_days'].apply(get_delay_bucket)
+    df_orders['delay_bucket'] = df_orders.apply(get_delay_bucket, axis=1)
 
     out_path = os.path.join(PROCESSED_DATA_DIR, 'olist_orders_cleaned.csv')
     df_orders.to_csv(out_path, index=False)

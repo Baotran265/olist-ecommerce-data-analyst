@@ -169,7 +169,7 @@ def analyze_geographic_bottlenecks(df):
     ax1.set_yticks(y_pos)
     ax1.set_yticklabels(plot_states['customer_state'], fontsize=11, fontweight='bold')
     ax1.set_xlabel('Delivery Delay Rate (% of orders arriving late)', fontsize=11)
-    ax1.set_title('Geographic Delivery Bottlenecks: Top Delayed States vs Best Performing States\n(Northeast region suffers the highest delay rates > 15%)',
+    ax1.set_title('Geographic Delivery Bottlenecks: Top Delayed States vs Best Performing States\n(Northeast states lead delay: AL 21.4%, MA 17.4%, SE 15.2%; Southeast: RJ 12.1%, SP 4.5%)',
                   fontsize=13, fontweight='bold', pad=15)
     ax1.axvline(order_routes['is_delayed'].mean() * 100, color='black', linestyle='--', label=f"National Avg Delay: {order_routes['is_delayed'].mean()*100:.1f}%")
 
@@ -217,6 +217,7 @@ def analyze_seller_risk_matrix(df):
     REVIEW_LOW_THRESHOLD = 3.8
     REVIEW_HIGH_THRESHOLD = 4.2
 
+    seller_stats['volume_tier'] = np.where(seller_stats['orders_count'] >= 30, 'Significant Volume (>= 30 orders)', 'Low Sample (< 30 orders)')
     seller_stats['quadrant'] = 'Normal (< 15k R$)'
     seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_LOW_THRESHOLD), 'quadrant'] = 'High Risk (Intervene)'
     seller_stats.loc[(seller_stats['total_revenue'] >= REV_THRESHOLD) & (seller_stats['avg_review'] >= REVIEW_LOW_THRESHOLD) & (seller_stats['avg_review'] < REVIEW_HIGH_THRESHOLD), 'quadrant'] = 'Standard High-Volume'
@@ -225,6 +226,8 @@ def analyze_seller_risk_matrix(df):
     high_risk_sellers = seller_stats[seller_stats['quadrant'] == 'High Risk (Intervene)'].sort_values(by='total_revenue', ascending=False)
     high_risk_sellers.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q3_high_risk_sellers.csv'), index=False)
     print(f"Identified {len(high_risk_sellers)} High Risk sellers (Order-deduplicated standard).")
+    print(f"  -> With Significant Volume (>= 30 orders): {len(high_risk_sellers[high_risk_sellers['orders_count'] >= 30])}")
+    print(f"  -> Low Sample Size (< 30 orders): {len(high_risk_sellers[high_risk_sellers['orders_count'] < 30])}")
 
     fig, ax = plt.subplots(figsize=(12, 7))
 
@@ -250,10 +253,10 @@ def analyze_seller_risk_matrix(df):
     ax.axhline(REVIEW_LOW_THRESHOLD, color='gray', linestyle=':')
     ax.axhline(REVIEW_HIGH_THRESHOLD, color='gray', linestyle=':')
 
-    # Highlight High Risk Quadrant
-    ax.annotate('CRITICAL INTERVENTION ZONE\n(High Revenue >= 15k R$, Low Review < 3.8)',
-                xy=(REV_THRESHOLD * 1.5, 2.0),
-                fontsize=11, fontweight='bold', color=ACCENT_RED,
+    # Highlight High Risk Quadrant (Positioned in lower whitespace to avoid covering dots at y=2.25)
+    ax.annotate('CRITICAL INTERVENTION ZONE\n(Revenue >= 15k R$, Review < 3.8 Stars)',
+                xy=(REV_THRESHOLD * 1.5, 1.25),
+                fontsize=10, fontweight='bold', color=ACCENT_RED,
                 bbox=dict(boxstyle="round,pad=0.5", fc="#ffebeb", ec=ACCENT_RED, lw=1))
 
     ax.set_title('Seller Risk Matrix: Revenue vs Customer Satisfaction\n(Prioritizing Sellers for Operational Audits)',
@@ -335,8 +338,10 @@ def analyze_customer_retention(df):
     repeat_all_count = len(repeat_all_ids)
     repeat_all_pct = (repeat_all_count / total_cust_all) * 100
 
-    # 2. Định nghĩa 2: Repeat Completed Purchases (Chỉ tính đơn giao thành công - 'delivered')
-    deliv_orders = merged[merged['order_status'] == 'delivered'].copy()
+    # 2. Định nghĩa 2: Repeat Completed Purchases (Chỉ tính đơn giao thành công hợp lệ từ master dataset/star schema)
+    # Deduplicate về cấp đơn hàng (Order Level) để phản ánh đúng từng giao dịch
+    deliv_valid = df[(df['order_status'] == 'delivered') & (df['is_valid_delivered'] == 1)].copy()
+    deliv_orders = deliv_valid.drop_duplicates(subset=['order_id']).copy()
     deliv_order_counts = deliv_orders.groupby('customer_unique_id')['order_id'].nunique()
     total_cust_deliv = len(deliv_order_counts)
     repeat_deliv_ids = set(deliv_order_counts[deliv_order_counts > 1].index)
@@ -347,12 +352,8 @@ def analyze_customer_retention(df):
     print(f"Total Unique Customers (Delivered Only): {total_cust_deliv:,} | Repeat Completed Purchases: {repeat_deliv_count:,} ({repeat_deliv_pct:.2f}%)")
 
     # Xác định đơn hàng đầu tiên (First Order) của từng khách hàng theo timestamp mua hàng
-    # Để thống nhất với định nghĩa chuẩn 'Repeat Completed Purchases', đo lường khả năng khách quay lại mua thành công
     deliv_sorted = deliv_orders.sort_values(by=['customer_unique_id', 'order_purchase_timestamp'])
     deliv_first = deliv_sorted.drop_duplicates(subset=['customer_unique_id'], keep='first').copy()
-    
-    # Chỉ xét các đơn đầu hợp lệ có ngày giao (is_valid_delivered == 1)
-    deliv_first = deliv_first[deliv_first['is_valid_delivered'] == 1].copy()
     deliv_first['is_repeat_customer'] = deliv_first['customer_unique_id'].isin(repeat_deliv_ids).astype(int)
 
     # Đánh giá tác động của giao hàng trễ ở đơn đầu tiên đối với tỷ lệ quay lại mua thành công
@@ -396,8 +397,11 @@ def analyze_customer_retention(df):
     labels = [f"One-Time Buyers\n({sizes[0]:,})",
               f"Repeat Buyers\n({sizes[1]:,})"]
     colors = ['#aec7e8', PRIMARY_COLOR]
-    ax1.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors, pctdistance=0.75,
+    wedges, texts, autotexts = ax1.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors, pctdistance=0.75,
             wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2))
+    for t in autotexts:
+        t.set_fontsize(10)
+        t.set_weight('bold')
     ax1.set_title(f'Overall Customer Retention Rate\n(Delivered-only: {repeat_deliv_pct:.2f}% | All statuses: {repeat_all_pct:.2f}%)', fontsize=12, fontweight='bold')
 
     # Subplot 2: Tác động của trải nghiệm giao hàng đơn đầu đến việc quay lại mua
@@ -413,10 +417,10 @@ def analyze_customer_retention(df):
         ax2.annotate(f"{h:.2f}%", xy=(bar.get_x() + bar.get_width() / 2, h),
                      xytext=(0, 6), textcoords="offset points", ha='center', va='bottom', fontsize=11, fontweight='bold')
 
-    # Vẽ mũi tên so sánh sụt giảm
+    # Vẽ mũi tên so sánh sụt giảm (không che nhãn cột)
     ax2.annotate(f"-{drop_pct:.1f}% relative drop!\n(p-value = {p_val:.3e})",
-                 xy=(1, delayed_rate),
-                 xytext=(0.5, 3.5),
+                 xy=(1, delayed_rate + 0.12),
+                 xytext=(0.4, 3.45),
                  arrowprops=dict(facecolor=ACCENT_RED, shrink=0.08, width=1.5, headwidth=6),
                  fontsize=10, fontweight='bold', color=ACCENT_RED)
 

@@ -1,3 +1,3 @@
 is_delayed,customer_count,repeat_rate,status_label
-0,86993,3.033577414274712,1st Order On-Time
-1,6357,2.5483718735252476,1st Order Delayed
+0,86995,3.035806655554917,1st Order On-Time
+1,6355,2.5177025963808024,1st Order Delayed

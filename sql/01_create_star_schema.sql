@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS fact_order_items (
     seller_id VARCHAR(32) NOT NULL,
     product_id VARCHAR(32) NOT NULL,
     order_date_key INT NOT NULL,
+    order_purchase_timestamp VARCHAR(26) NOT NULL,
     order_status VARCHAR(20) NOT NULL,
     
     -- Financial Measures

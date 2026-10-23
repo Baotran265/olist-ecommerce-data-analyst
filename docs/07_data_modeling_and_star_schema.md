@@ -3,7 +3,7 @@
 > **Dự án:** Olist Brazilian E-Commerce Analytics  
 > **Kiến trúc:** Dimensional Modeling (Star Schema - Kimball Methodology)  
 > **Tệp mô hình vật lý:** `data/processed/star_schema/`  
-> **Cơ sở dữ liệu:** `data/olist_star_schema.db` (SQLite) / `sql/01_create_star_schema.sql` (PostgreSQL/DuckDB/BigQuery)  
+> **Cơ sở dữ liệu:** `data/olist_star_schema.db` (SQLite) / `sql/01_create_star_schema.sql` (PostgreSQL/DuckDB/SQLite DDL)  
 
 ---
 
@@ -16,7 +16,7 @@ Trong môi trường phân tích dữ liệu hiện đại (Modern Analytics Sta
 | Tiêu chí | 3NF (Chuẩn hóa giao dịch) | Flat Table (1 Bảng dẹt duy nhất) | **Star Schema (Kimball Methodology - LỰA CHỌN)** |
 | :--- | :--- | :--- | :--- |
 | **Mục đích thiết kế** | Tối ưu ghi (OLTP), tránh trùng lặp dữ liệu khi insert/update | Nhanh, tiện lợi cho phân tích sơ bộ một lần | **Tối ưu đọc & phân tích (OLAP/BI), chuẩn mực ngành** |
-| **Số lượng bảng** | 9 bảng liên kết phức tạp (Snowflake) | 1 bảng duy nhất 35+ cột | **1 Fact Table + 4 Dimension Tables** |
+| **Số lượng bảng** | 9 bảng liên kết phức tạp (Snowflake) | 1 bảng duy nhất 34 cột | **1 Fact Table + 4 Dimension Tables** |
 | **Rủi ro nhân dòng** | Rất cao khi join qua lại các bảng 1-N | Đã denormalize nhưng nặng bộ nhớ khi lọc | **Triệt tiêu hoàn toàn (Grain được phân tách rõ ràng)** |
 | **Hiệu năng Power BI** | Chậm (Nhiều quan hệ bắc cầu, quan hệ 2 chiều) | Tốn RAM, khó viết DAX Time Intelligence | **Tối ưu tuyệt đối với VertiPaq Engine, DAX đơn giản** |
 
@@ -36,6 +36,7 @@ erDiagram
         date date
         int year
         string quarter
+        string year_quarter
         int month
         string month_name
         string year_month
@@ -82,6 +83,7 @@ erDiagram
         string seller_id FK
         string product_id FK
         int order_date_key FK
+        string order_purchase_timestamp
         string order_status
         decimal price
         decimal freight_value
@@ -107,7 +109,7 @@ erDiagram
 
 ### 3.1. Bảng Fact: `fact_order_items`
 * **Grain:** **1 dòng = 1 sản phẩm (item) trong 1 đơn hàng.**
-* **Số dòng:** 112,650 dòng.
+* **Số dòng:** 112,650 dòng, 23 cột.
 * **Khóa chính ghép (Composite Primary Key):** `(order_id, order_item_id)`.
 * **Khóa ngoại (Foreign Keys):**
   - `customer_id` -> `dim_customers.customer_id`
@@ -123,22 +125,22 @@ erDiagram
 ### 3.2. Bảng Chiều: `dim_customers`
 * **Grain:** 1 dòng = 1 tài khoản mua hàng (`customer_id`).
 * **Số dòng:** 99,441 dòng.
-* **Điểm nổi bật:** Được tích hợp sẵn tọa độ địa lý `geolocation_lat` và `geolocation_lng` (trung vị) từ bảng Geolocation sạch, sẵn sàng phục vụ bản đồ nhiệt (Heatmap) trên Power BI mà không lo bị nhân dòng.
+* **Tọa độ địa lý:** Tích hợp tọa độ địa lý `geolocation_lat` và `geolocation_lng` (trung vị) từ bảng Geolocation sạch. *(Lưu ý: có 279 dòng mang giá trị NULL do tiền tố zip code không tồn tại trong danh mục bưu chính sau khi lọc ngoại lai).*
 
 ### 3.3. Bảng Chiều: `dim_sellers`
 * **Grain:** 1 dòng = 1 người bán (`seller_id`).
 * **Số dòng:** 3,095 dòng.
-* **Điểm nổi bật:** Tích hợp tọa độ địa lý người bán và thông tin bang/thành phố chuẩn hóa.
+* **Tọa độ địa lý:** Tích hợp tọa độ người bán *(có 7 dòng NULL do thiếu mã zip code trong bảng geo)*.
 
 ### 3.4. Bảng Chiều: `dim_products`
 * **Grain:** 1 dòng = 1 sản phẩm duy nhất (`product_id`).
 * **Số dòng:** 32,951 dòng.
-* **Điểm nổi bật:** Chứa tên danh mục tiếng Anh chuẩn (`product_category_formatted`), đã bổ sung đầy đủ bản dịch thủ công cho các category thiếu và xử lý missing value.
+* **Tên danh mục:** Tên danh mục tiếng Anh chuẩn hóa (`product_category_formatted`), đã bổ sung đầy đủ bản dịch cho các category thiếu và xử lý chính tả.
 
 ### 3.5. Bảng Chiều: `dim_date`
 * **Grain:** 1 dòng = 1 ngày theo lịch (Calendar Day) từ `2016-01-01` đến `2018-12-31`.
 * **Số dòng:** 1,096 ngày.
-* **Khóa ngày:** `date_key` dạng số nguyên `YYYYMMDD` (ví dụ: `20170115`), chuẩn hóa cho việc join siêu nhanh trên SQL và Power BI.
+* **Khóa ngày:** `date_key` dạng số nguyên `YYYYMMDD` (ví dụ: `20170115`), kèm cột `year_quarter` (`2017-Q1`).
 
 ### 3.6. ⚠️ Lưu ý về Grain Mismatch: `review_score` & `satisfaction_tier`
 
@@ -152,10 +154,21 @@ erDiagram
 -- SAI: Tính trung bình trên toàn bộ dòng fact (bị nhân dòng)
 Avg Review Score (WRONG) = AVERAGE(fact_order_items[review_score])
 
--- ĐÚNG: Deduplicate về cấp order trước khi tính trung bình
-Avg Review Score (CORRECT) = 
+-- ĐÚNG: Deduplicate về cấp order trước khi tính trung bình (đồng thời lọc đơn giao thành công hợp lệ)
+Avg Review Score Delivered = 
 AVERAGEX(
-    SUMMARIZE(fact_order_items, fact_order_items[order_id], fact_order_items[review_score]),
+    FILTER(
+        SUMMARIZE(
+            fact_order_items, 
+            fact_order_items[order_id], 
+            fact_order_items[order_status],
+            fact_order_items[is_valid_delivered],
+            fact_order_items[review_score]
+        ),
+        fact_order_items[order_status] = "delivered" && 
+        fact_order_items[is_valid_delivered] = 1 &&
+        NOT(ISBLANK(fact_order_items[review_score]))
+    ),
     fact_order_items[review_score]
 )
 ```
@@ -168,22 +181,21 @@ SELECT AVG(review_score)
 FROM (
     SELECT order_id, review_score
     FROM fact_order_items
-    WHERE order_status = 'delivered' AND review_score IS NOT NULL
+    WHERE order_status = 'delivered' AND is_valid_delivered = 1 AND review_score IS NOT NULL
     GROUP BY order_id, review_score
 ) AS order_level;
 ```
 
-> **Lý do giữ `review_score` trong Fact Table thay vì tách riêng:** Trong bối cảnh dự án portfolio, việc giữ `review_score` trong `fact_order_items` giúp **giảm độ phức tạp mô hình** (tránh thêm 1 bảng Fact riêng cho Reviews) và vẫn cho phép slicing/filtering trực tiếp trên dashboard. Điều quan trọng là **người phân tích phải deduplicate về `order_id` khi tính các chỉ số phân tích ở cấp độ đơn hàng**. Các câu truy vấn phân tích Đơn hàng và Người bán trong [02_kpi_business_queries.sql](../sql/02_kpi_business_queries.sql) đều đã áp dụng kỹ thuật này (xem Query 1: CTE `order_level` với `GROUP BY order_id`, Query 3: CTE `seller_orders`). Riêng Query 4 phân tích Ngành hàng (Category) được tổng hợp ở cấp Item-level để phản ánh đúng trọng số sản phẩm tiêu thụ.
-
-> **⚠️ Lưu ý mở rộng cho Power BI DAX:** Quy tắc deduplicate này **không chỉ áp dụng cho `review_score`** mà còn cho tất cả các trường order-level khác đang nằm trong fact table: `actual_delivery_days`, `estimated_delivery_days`, `delivery_delay_days`, `satisfaction_tier`. Toàn bộ các DAX Measures tính trung bình cho các trường này **bắt buộc** phải dùng `AVERAGEX(VALUES(order_id), ...)` thay vì `AVERAGE()` trực tiếp. Xem chi tiết trong [powerbi/dax_measures_and_model_guide.md](../powerbi/dax_measures_and_model_guide.md) — Nhóm 2 (Measures #12-14) và Nhóm 3 (Measure #15).
+> **⚠️ Lưu ý mở rộng cho Power BI DAX:** Quy tắc deduplicate này áp dụng cho tất cả các trường order-level khác đang nằm trong fact table: `actual_delivery_days`, `estimated_delivery_days`, `delivery_delay_days`. Toàn bộ các DAX Measures tính trung bình cho các trường này đều sử dụng cấu trúc Grain-Safe `AVERAGEX(SUMMARIZE(...))`. Xem chi tiết trong [powerbi/dax_measures_and_model_guide.md](../powerbi/dax_measures_and_model_guide.md) — Nhóm 2 (Measures #13–15) và Nhóm 3 (Measure #16).
 
 ---
 
 ## ⚡ 4. Tối ưu Hóa Hiệu Năng Truy Vấn (Performance & Indexing)
 
-Trong cơ sở dữ liệu `data/olist_star_schema.db`, toàn bộ các trường khóa ngoại và các cờ lọc thường dùng đã được đánh chỉ mục (B-Tree Indexes):
+Trong cơ sở dữ liệu `data/olist_star_schema.db`, toàn bộ 7 Performance Indexes đã được khởi tạo:
 
 ```sql
+CREATE INDEX idx_fact_order ON fact_order_items(order_id);
 CREATE INDEX idx_fact_cust ON fact_order_items(customer_id);
 CREATE INDEX idx_fact_seller ON fact_order_items(seller_id);
 CREATE INDEX idx_fact_prod ON fact_order_items(product_id);
@@ -192,7 +204,7 @@ CREATE INDEX idx_fact_status ON fact_order_items(order_status);
 CREATE INDEX idx_fact_delayed ON fact_order_items(is_delayed);
 ```
 
-Nhờ cấu trúc này, toàn bộ 5 câu truy vấn phân tích nghiệp vụ phức tạp trong [sql/02_kpi_business_queries.sql](../sql/02_kpi_business_queries.sql) (bao gồm CTE, Window Functions, Partition By) đều thực thi trong **chưa đầy 100 milliseconds**!
+Nhờ cấu trúc chỉ mục B-Tree này, 5 câu truy vấn phân tích nghiệp vụ trong [sql/02_kpi_business_queries.sql](../sql/02_kpi_business_queries.sql) (bao gồm CTE, Window Functions, Partition By) đều thực thi nhanh chóng (khoảng 100 – 600 ms trên SQLite tùy cấu hình phần cứng).
 
 ---
 *Tài liệu này được biên soạn cho Phase 6 của dự án Olist Data Analyst Portfolio.*
