@@ -93,6 +93,7 @@ erDiagram
         float delivery_delay_days
         int is_delayed
         int is_valid_delivered
+        int is_valid_delivery_delay
         string delay_bucket
         float seller_dispatch_days
         float carrier_delivery_days
@@ -109,7 +110,7 @@ erDiagram
 
 ### 3.1. Bảng Fact: `fact_order_items`
 * **Grain:** **1 dòng = 1 sản phẩm (item) trong 1 đơn hàng.**
-* **Số dòng:** 112,650 dòng, 23 cột.
+* **Số dòng:** 112,650 dòng, 24 cột.
 * **Khóa chính ghép (Composite Primary Key):** `(order_id, order_item_id)`.
 * **Khóa ngoại (Foreign Keys):**
   - `customer_id` -> `dim_customers.customer_id`
@@ -118,8 +119,8 @@ erDiagram
   - `order_date_key` -> `dim_date.date_key`
 * **Metrics & Chỉ số vận hành:**
   - `price`, `freight_value`, `item_total_value` (Doanh thu & cước phí).
-  - `actual_delivery_days`, `delivery_delay_days`, `is_delayed` (Chỉ số thời gian giao hàng).
-  - `review_score`, `satisfaction_tier` (Chỉ số điểm hài lòng).
+  - `actual_delivery_days`, `estimated_delivery_days`, `delivery_delay_days`, `is_delayed`, `is_valid_delivered`, `is_valid_delivery_delay`, `delay_bucket`, `seller_dispatch_days`, `carrier_delivery_days` (Chỉ số thời gian vận chuyển & các cờ kiểm soát tính hợp lệ).
+  - `review_score`, `satisfaction_tier`, `has_comment` (Chỉ số điểm hài lòng & phản hồi đánh giá).
   - `is_interstate` (Cờ giao hàng liên bang).
 
 ### 3.2. Bảng Chiều: `dim_customers`
@@ -162,11 +163,11 @@ AVERAGEX(
             fact_order_items, 
             fact_order_items[order_id], 
             fact_order_items[order_status],
-            fact_order_items[is_valid_delivered],
+            fact_order_items[is_valid_delivery_delay],
             fact_order_items[review_score]
         ),
         fact_order_items[order_status] = "delivered" && 
-        fact_order_items[is_valid_delivered] = 1 &&
+        fact_order_items[is_valid_delivery_delay] = 1 &&
         NOT(ISBLANK(fact_order_items[review_score]))
     ),
     fact_order_items[review_score]
@@ -181,7 +182,7 @@ SELECT AVG(review_score)
 FROM (
     SELECT order_id, review_score
     FROM fact_order_items
-    WHERE order_status = 'delivered' AND is_valid_delivered = 1 AND review_score IS NOT NULL
+    WHERE order_status = 'delivered' AND is_valid_delivery_delay = 1 AND review_score IS NOT NULL
     GROUP BY order_id, review_score
 ) AS order_level;
 ```
@@ -204,7 +205,7 @@ CREATE INDEX idx_fact_status ON fact_order_items(order_status);
 CREATE INDEX idx_fact_delayed ON fact_order_items(is_delayed);
 ```
 
-Nhờ cấu trúc chỉ mục B-Tree này, 5 câu truy vấn phân tích nghiệp vụ trong [sql/02_kpi_business_queries.sql](../sql/02_kpi_business_queries.sql) (bao gồm CTE, Window Functions, Partition By) đều thực thi nhanh chóng (khoảng 100 – 600 ms trên SQLite tùy cấu hình phần cứng).
+Nhờ cấu trúc chỉ mục B-Tree này, 5 câu truy vấn phân tích nghiệp vụ trong [sql/02_kpi_business_queries.sql](../sql/02_kpi_business_queries.sql) (sử dụng CTEs, Aggregations, và Window Functions với `PARTITION BY` trong Query 2 & 5) đều thực thi nhanh chóng (khoảng 100 – 600 ms trên SQLite tùy cấu hình phần cứng).
 
 ---
 *Tài liệu này được biên soạn cho Phase 6 của dự án Olist Data Analyst Portfolio.*

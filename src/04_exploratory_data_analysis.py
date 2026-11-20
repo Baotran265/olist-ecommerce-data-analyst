@@ -56,10 +56,8 @@ def load_data():
 # ==========================================
 def analyze_delivery_delay_vs_satisfaction(df):
     print("--- [Question 1] Delivery Delay vs Review Score ---")
-    deliv = df[df['order_status'] == 'delivered'].drop_duplicates(subset=['order_id']).copy()
-
-    # Lọc bỏ 8 đơn delivered bị thiếu ngày giao hàng thực tế (delay_bucket = 'Not Delivered')
-    # Mẫu số đơn hàng có ngày giao hợp lệ là 96,470 đơn
+    # Chỉ giữ đơn giao thành công có đủ ngày giao thực tế và ngày dự kiến (is_valid_delivery_delay = 1)
+    # Mẫu số đơn hàng hợp lệ là 96,470 đơn
     bucket_order = ['On Time / Early', '1-3 Days Late', '4-7 Days Late', '> 7 Days Late']
     deliv_valid = df[df['is_valid_delivery_delay'] == 1].drop_duplicates(subset=['order_id']).copy()
 
@@ -82,7 +80,7 @@ def analyze_delivery_delay_vs_satisfaction(df):
     # Subplot 1: Điểm đánh giá trung bình theo từng mức trễ
     colors = [ACCENT_GREEN, '#a1d99b', ACCENT_ORANGE, ACCENT_RED]
     bars = ax1.bar(bucket_stats['delay_bucket'], bucket_stats['mean_review'], color=colors, width=0.55, edgecolor='black', linewidth=0.5)
-    ax1.set_title('Average Review Score by Delivery Delay Bucket\n(The "Tolerance Cliff" after 3 days)', fontsize=13, fontweight='bold', pad=15)
+    ax1.set_title('Average Review Score by Delivery Delay Bucket', fontsize=13, fontweight='bold', pad=15)
     ax1.set_ylabel('Mean Review Score (1 to 5 Stars)', fontsize=11)
     ax1.set_ylim(0, 5)
     ax1.axhline(deliv_valid['review_score'].mean(), color=NEUTRAL_GRAY, linestyle='--', label=f"Overall Mean: {deliv_valid['review_score'].mean():.2f} / 5")
@@ -95,7 +93,7 @@ def analyze_delivery_delay_vs_satisfaction(df):
 
     # Subplot 2: Tỷ lệ đánh giá 1 sao (Cực kỳ không hài lòng)
     bars2 = ax2.bar(bucket_stats['delay_bucket'], bucket_stats['pct_1_star'], color=colors, width=0.55, edgecolor='black', linewidth=0.5)
-    ax2.set_title('% of 1-Star (Extremely Dissatisfied) Reviews\n(More than half give 1-star when delay > 3 days)', fontsize=13, fontweight='bold', pad=15)
+    ax2.set_title('% of 1-Star Reviews by Delivery Delay Bucket', fontsize=13, fontweight='bold', pad=15)
     ax2.set_ylabel('% of 1-Star Reviews', fontsize=11)
     ax2.set_ylim(0, 80)
 
@@ -117,7 +115,7 @@ def analyze_geographic_bottlenecks(df):
     print("--- [Question 2] Geographic Bottlenecks & Interstate Delivery ---")
     # Lọc đơn giao thành công hợp lệ (có ngày giao thực tế - 96,470 đơn)
     deliv_valid = df[df['is_valid_delivery_delay'] == 1].copy()
-        # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate) ở cấp độ ĐƠN HÀNG (Order-level)
+    # 1. Phân tích Vận chuyển Liên bang (Interstate) vs Nội bang (Intrastate) ở cấp độ ĐƠN HÀNG (Order-level)
     # Tính tổng cước phí mỗi đơn (thay vì lấy ngẫu nhiên 1 sản phẩm) để phản ánh đúng gánh nặng cước ship
     # LƯU Ý: is_interstate dùng max() nên nếu đơn có nhiều sản phẩm và ít nhất 1 sản phẩm liên bang, 
     # đơn đó được phân loại là "Interstate". Đây là phân loại ở cấp đơn hàng.
@@ -222,7 +220,7 @@ def analyze_seller_risk_matrix(df):
 
     seller_stats['volume_tier'] = np.where(seller_stats['orders_count'] >= 30, 'Significant Volume (>= 30 orders)', 'Low Sample (< 30 orders)')
     
-    # [SỬA LỖI 2.2] Khởi tạo quadrant mặc định
+    # Khởi tạo phân khúc (quadrant) mặc định
     seller_stats['quadrant'] = 'Normal (< 15k R$)'
     
     # Xử lý trường hợp thiếu review (Không thể đánh giá rủi ro)
@@ -256,7 +254,7 @@ def analyze_seller_risk_matrix(df):
             'Star Sellers (Top Performers)': ACCENT_GREEN,
             'High Risk - Intervene': ACCENT_RED,
             'Potential Risk - Monitor (Low Sample)': '#ff9896',
-            'No Reviews - Insufficient Data': NEUTRAL_GRAY  # <-- DÒNG MỚI THÊM VÀO
+            'No Reviews - Insufficient Data': NEUTRAL_GRAY
         },
         alpha=0.8,
         s=60,
@@ -292,13 +290,8 @@ def analyze_seller_risk_matrix(df):
 def analyze_category_performance(df):
     print("--- [Question 4] Product Category Performance Matrix ---")
     deliv = df[df['is_valid_delivery_delay'] == 1].copy()
-    # [SỬA LỖI 2.3] NOTE ON GRAIN: Order-Category Level Analysis
-    # We are analyzing at the 'Order-Category' level. 
-    # If an order contains items from multiple categories, the order's review score 
-    # is attributed to EACH category present in the order. 
-    # This answers: "How do customers rate orders containing products from Category X?"
-    # It does NOT answer: "What is the average review of Category X items?" (which would require item-level).
-    # Using 'first' for review_score is safe here because review is at order level (already deduplicated).
+    # Lưu ý về Grain: Phân tích ở cấp độ Order-Category (Deduplicate review và delay theo từng order-category)
+    # Trả lời câu hỏi: Khách hàng đánh giá thế nào về đơn hàng có chứa sản phẩm thuộc danh mục X?
     
     order_cat = deliv.groupby(['order_id', 'product_category_formatted']).agg(
         review_score=('review_score', 'first'),
@@ -378,12 +371,11 @@ def analyze_customer_retention(df):
     repeat_deliv_count = len(repeat_deliv_ids)
     repeat_deliv_pct = (repeat_deliv_count / total_cust_deliv) * 100
 
-      # MỚI (Copy và dán 2 dòng này vào đúng vị trí vừa xóa):
     print(f"Total Unique Customers (All Statuses): {total_cust_all:,} | Repeat Orders Placed (toàn bộ kỳ quan sát): {repeat_all_count:,} ({repeat_all_pct:.2f}%)")
     print(f"Total Unique Customers (Delivered Only): {total_cust_deliv:,} | Repeat Completed Purchases (toàn bộ kỳ quan sát): {repeat_deliv_count:,} ({repeat_deliv_pct:.2f}%)")
 
     # Xác định đơn hàng đầu tiên (First Order) của từng khách hàng theo timestamp mua hàng
-    deliv_sorted = deliv_orders.sort_values(by=['customer_unique_id', 'order_purchase_timestamp'])
+    deliv_sorted = deliv_orders.sort_values(by=['customer_unique_id', 'order_purchase_timestamp', 'order_id'])
     deliv_first = deliv_sorted.drop_duplicates(subset=['customer_unique_id'], keep='first').copy()
     deliv_first['is_repeat_customer'] = deliv_first['customer_unique_id'].isin(repeat_deliv_ids).astype(int)
 
@@ -395,8 +387,11 @@ def analyze_customer_retention(df):
 
     retention_by_delay['status_label'] = retention_by_delay['is_delayed'].map({0: '1st Delivered Order: On-Time', 1: '1st Delivered Order: Delayed'})    
     retention_by_delay.to_csv(os.path.join(OUTPUT_TABLES_DIR, 'q5_retention_by_first_order_delay.csv'), index=False)
-    print("Impact of 1st Order Delivery on Repeat Completed Purchases:")
+    
+    
+    print("Association Between First Delivered Order Delay and Repeat Purchases:")    
     print(retention_by_delay)
+
 
     # Statistical significance test (Chi-Square Test of Independence)
     # Contingency table: [[repeat_ontime, nonrepeat_ontime], [repeat_delayed, nonrepeat_delayed]]
@@ -417,14 +412,18 @@ def analyze_customer_retention(df):
     print(f"Chi2: {chi2:.4f}, p-value: {p_val:.4e} (p < 0.05: {p_val < 0.05})")
     print(f"Absolute drop: {abs_drop:.2f} percentage points ({on_time_rate:.2f}% -> {delayed_rate:.2f}%)")
     print(f"Relative drop: {drop_pct:.1f}%")
+
     
-    # [SỬA LỖI 2.4] Disclaimer về Observation Window Bias
     print(f"\n[NOTE ON METHODOLOGY - OBSERVATION WINDOW BIAS]")
-    print(f"This analysis shows correlation within the dataset's observation period (2016-2018).")
-    print(f"Customers with delayed first orders occurring late in the dataset have less time")
-    print(f"to make a second purchase. Therefore, the {drop_pct:.1f}% relative drop may slightly")
-    print(f"overstate the true causal impact. This should be treated as a strong hypothesis")
-    print(f"requiring further validation via Cohort Analysis or A/B Testing.\n")
+    print("This analysis measures an association within the dataset's observation period (2016-2018).")
+    print("Customers whose first valid delivered orders occurred near the end of the period")
+    print("had less time to make a repeat purchase.")
+    print(f"The observed repeat-purchase rate was {on_time_rate:.2f}% for customers")
+    print(f"whose first valid delivered order was on time, versus {delayed_rate:.2f}%")
+    print("for customers whose first valid delivered order was delayed.")
+    print("This observational comparison does not establish causality.")
+
+    print("A fixed follow-up window or cohort analysis is needed for a fairer comparison.\n")
 
     # Trực quan hóa
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
@@ -446,8 +445,12 @@ def analyze_customer_retention(df):
     # Subplot 2: Tác động của trải nghiệm giao hàng đơn đầu đến việc quay lại mua
     bars = ax2.bar(retention_by_delay['status_label'], retention_by_delay['repeat_rate'],
                    color=[ACCENT_GREEN, ACCENT_RED], width=0.45, edgecolor='black', linewidth=0.5)
-    ax2.set_title(f'Impact of 1st Delivered Order Experience on Retention\n({drop_pct:.1f}% relative drop if 1st delivered order is delayed)',
-                  fontsize=12, fontweight='bold', pad=15)
+    ax2.set_title(
+        f'First Delivered Order Delay and Repeat Purchase Rate\n'
+        f'Observed relative difference: {drop_pct:.1f}%',
+        fontsize=12,
+        fontweight='bold',
+        pad=15 )
     ax2.set_ylabel('Repeat Purchase Rate (%)', fontsize=11)
     ax2.set_ylim(0, 4.2)
 
@@ -457,11 +460,12 @@ def analyze_customer_retention(df):
                      xytext=(0, 6), textcoords="offset points", ha='center', va='bottom', fontsize=11, fontweight='bold')
 
     # Vẽ mũi tên so sánh sụt giảm (không che nhãn cột)
-    ax2.annotate(f"-{drop_pct:.1f}% relative drop!\n(p-value = {p_val:.3e})",
-                 xy=(1, delayed_rate + 0.12),
-                 xytext=(0.4, 3.45),
-                 arrowprops=dict(facecolor=ACCENT_RED, shrink=0.08, width=1.5, headwidth=6),
-                 fontsize=10, fontweight='bold', color=ACCENT_RED)
+    ax2.annotate(
+        f"{drop_pct:.1f}% lower observed rate\n(p-value = {p_val:.3e})",
+        xy=(1, delayed_rate + 0.12),
+        xytext=(0.4, 3.45),
+        arrowprops=dict(facecolor=ACCENT_RED, shrink=0.08, width=1.5, headwidth=6),
+        fontsize=10, fontweight='bold', color=ACCENT_RED)
 
     plt.tight_layout()
     fig_path = os.path.join(OUTPUT_FIGURES_DIR, 'fig5_customer_retention_and_first_order_impact.png')

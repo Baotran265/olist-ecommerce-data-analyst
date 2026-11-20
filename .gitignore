@@ -48,3 +48,5 @@ data/*.db
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+.tmp.driveupload/

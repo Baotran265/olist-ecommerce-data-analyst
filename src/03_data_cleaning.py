@@ -3,8 +3,9 @@ import sys
 import pandas as pd
 import numpy as np
 
-# Đảm bảo mã hóa UTF-8 cho console Windows
-sys.stdout.reconfigure(encoding='utf-8')
+# Đảm bảo mã hóa UTF-8 cho console Windows (an toàn khi chạy trong Jupyter/pipe)
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
 # 1. CONFIGURATION & DIRECTORIES
@@ -186,7 +187,7 @@ def clean_order_reviews():
     df_reviews['review_creation_date'] = pd.to_datetime(df_reviews['review_creation_date'], errors='coerce')
     df_reviews['review_answer_timestamp'] = pd.to_datetime(df_reviews['review_answer_timestamp'], errors='coerce')
 
-        # 2. Xử lý nhiều review cho 1 đơn hàng (Deduplication on order_id):
+    # 2. Xử lý nhiều review cho 1 đơn hàng (Deduplication on order_id):
     # Log kiểm tra edge-case TRƯỚC KHI deduplicate
     total_reviews = len(df_reviews)
     null_timestamps = df_reviews['review_answer_timestamp'].isna().sum()
@@ -200,8 +201,13 @@ def clean_order_reviews():
     print(f"[LOG] Reviews thiếu timestamp: {null_timestamps}")
     print(f"[LOG] Orders có nhiều review cùng timestamp: {duplicate_timestamps}")
     
-    # Sắp xếp theo review_answer_timestamp mới nhất và giữ lại 1 review đại diện cuối cùng cho mỗi đơn hàng
-    df_reviews_sorted = df_reviews.sort_values(by=['order_id', 'review_answer_timestamp'], ascending=[True, False])
+    # Giữ 1 review đại diện cho mỗi đơn hàng: review_answer_timestamp mới nhất;
+    # nếu trùng timestamp thì ưu tiên review_id lớn hơn để kết quả xác định (deterministic).
+    df_reviews_sorted = df_reviews.sort_values(
+        by=['order_id', 'review_answer_timestamp', 'review_id'],
+        ascending=[True, False, False],
+        na_position='last'
+    )
     df_reviews_clean = df_reviews_sorted.drop_duplicates(subset=['order_id'], keep='first').copy()
 
     # 3. Phân loại cảm xúc dựa trên review_score (1-2: Negative, 3: Neutral, 4-5: Positive)
@@ -228,7 +234,7 @@ def clean_order_reviews():
         'Order Reviews',
         raw_count,
         len(df_reviews_clean),
-        f"Lọc bỏ {raw_count - len(df_reviews_clean):,} review trùng order_id (giữ review mới nhất theo timestamp); thêm cột satisfaction_tier; flag has_comment.",
+        f"Lọc bỏ {raw_count - len(df_reviews_clean):,} review trùng order_id (giữ review mới nhất theo timestamp; nếu trùng timestamp thì chọn theo review_id); thêm cột satisfaction_tier; flag has_comment.",
         "Ngăn chặn việc 1 order có nhiều review gây nhân dòng khi kết nối với bảng Orders."
     )
     return df_reviews_clean
@@ -345,7 +351,7 @@ def clean_orders_and_engineer_features():
         0
     )
 
-    # [SỬA LỖI 1] is_valid_delivery_delay: 1 nếu đơn đã giao VÀ có đủ CẢ ngày giao thực tế lẫn ngày dự kiến.
+    # is_valid_delivery_delay: 1 nếu đơn đã giao VÀ có đủ CẢ ngày giao thực tế lẫn ngày dự kiến.
     # Tránh trường hợp NaN > 0 trả về False khiến đơn thiếu ngày dự kiến bị tính nhầm là "đúng hạn".
     df_orders['is_valid_delivery_delay'] = np.where(
         (df_orders['is_valid_delivered'] == 1) & (df_orders['order_estimated_delivery_date'].notna()),
@@ -353,7 +359,7 @@ def clean_orders_and_engineer_features():
         0
     )
 
-    # [SỬA LỖI 1] is_delayed: Chỉ tính trên các đơn có delay xác định (is_valid_delivery_delay == 1)
+    # is_delayed: Chỉ tính trên các đơn có delay xác định (is_valid_delivery_delay == 1)
     df_orders['is_delayed'] = np.where(
         (df_orders['is_valid_delivery_delay'] == 1) & (df_orders['delivery_delay_days'] > 0),
         1,
@@ -362,7 +368,7 @@ def clean_orders_and_engineer_features():
 
     # Nhóm thời gian giao hàng (Delivery Buckets) để phân tích trực quan
     def get_delay_bucket(row):
-        # [SỬA LỖI 1] Dùng is_valid_delivery_delay để loại bỏ cả những đơn thiếu ngày dự kiến
+        # Dùng is_valid_delivery_delay để loại bỏ cả những đơn thiếu ngày dự kiến
         if row['is_valid_delivery_delay'] == 0:
             return 'Not Delivered / Unknown Delay'
         
@@ -386,7 +392,7 @@ def clean_orders_and_engineer_features():
         'Orders',
         raw_count,
         len(df_orders),
-        "Ép kiểu 5 cột datetime; sinh feature thời gian (actual_delivery_days, delivery_delay_days, is_delayed, seller_dispatch_days, delay_bucket).",
+        "Ép kiểu 5 cột datetime; chuẩn hóa mốc thời gian về cấp ngày bằng `dt.normalize()` khi tính độ trễ (đơn giao trong ngày dự kiến tính là đúng hạn); sinh feature thời gian (actual_delivery_days, delivery_delay_days, is_delayed, seller_dispatch_days, delay_bucket) và hai cờ kiểm soát hợp lệ: `is_valid_delivered` (status = delivered và có ngày giao khách) và `is_valid_delivery_delay` (delivered và cả ngày giao thực tế lẫn ngày dự kiến đều hợp lệ; tập chuẩn 96,470 đơn).",
         "Tạo các metrics cốt lõi để trả lời trực tiếp các câu hỏi bài toán kinh doanh về Delivery Performance & Customer Satisfaction."
     )
     return df_orders
@@ -439,15 +445,12 @@ def build_master_analytical_dataset(df_orders, df_items, df_prods, df_cust, df_s
     assert master[['customer_state', 'seller_state']].notna().all().all(), "Phát hiện giá trị thiếu trong customer_state hoặc seller_state trước khi tính is_interstate!"
     master['is_interstate'] = (master['customer_state'] != master['seller_state']).astype(int)
 
-    # [BƯỚC 1] KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY CHECK)
-        # [BƯỚC 1] KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY CHECK)
+    # KIỂM TRA TÍNH TOÀN VẸN DỮ LIỆU (DATA INTEGRITY CHECK)
     assert len(master) == len(df_items), "Lỗi: Master dataset bị mất hoặc nhân dòng so với Order Items!"
-    # Sửa lại: Kiểm tra trùng lặp theo cặp khóa chính (order_id, order_item_id)
+    # Kiểm tra trùng lặp theo cặp khóa chính (order_id, order_item_id)
     assert not master[['order_id', 'order_item_id']].duplicated().any(), \
         "Lỗi: Cặp khóa chính (order_id, order_item_id) bị trùng lặp trong master dataset!"
-    # [BỔ SUNG] Kiểm tra giá trị hợp lệ - dùng log cảnh báo thay vì assert cứng
-    # Vì dataset Olist gốc có ~157 dòng seller_dispatch_days âm (carrier nhận hàng trước khi khách đặt)
-    # nên actual_delivery_days có thể âm. Đây là anomaly của dữ liệu gốc, không phải lỗi pipeline.
+    # Kiểm tra giá trị bất thường: chỉ cảnh báo (không assert cứng) vì đây là anomaly của dữ liệu gốc Olist, không phải lỗi pipeline.
     negative_delivery_count = (master['actual_delivery_days'] < 0).sum()
     if negative_delivery_count > 0:
         print(f"[WARNING] Có {negative_delivery_count} dòng có actual_delivery_days âm (data anomaly từ Olist).")
@@ -464,7 +467,7 @@ def build_master_analytical_dataset(df_orders, df_items, df_prods, df_cust, df_s
         'Master Analytical Dataset',
         len(df_items),
         len(master),
-        f"Denormalize sạch tích hợp 6 bảng (Items + Orders + Products + Customers + Sellers + Reviews) tại grain 1 item/dòng; thêm cờ is_interstate.",
+        f"Denormalize sạch tích hợp 6 bảng (Items + Orders + Products + Customers + Sellers + Reviews) tại grain 1 item/dòng ({len(master.columns)} cột); thêm cờ is_interstate.",
         "File phân tích all-in-one phục vụ trực tiếp cho Exploratory Data Analysis (EDA) và xây dựng Dashboard Power BI mà không lo bị nhân dòng."
     )
     return master
@@ -483,21 +486,22 @@ def generate_cleaning_log_report():
     print(f"  -> Saved summary CSV to: {csv_path}")
 
     # Generate Markdown documentation
-    md = "# DATA CLEANING & TRANSFORMATION LOG\n\n"
+    md = "# NHẬT KÝ LÀM SẠCH & CHUẨN HÓA DỮ LIỆU (DATA CLEANING & TRANSFORMATION LOG)\n\n"
     md += "> Tài liệu này ghi lại chi tiết các bước xử lý, làm sạch và chuẩn hóa dữ liệu từ `data/raw/` sang `data/processed/`.\n"
     md += "> Được tạo tự động bởi pipeline `src/03_data_cleaning.py`.\n\n"
-    md += "## 1. Summary of Cleaning Actions\n\n"
-    md += "| Table | Raw Rows | Cleaned Rows | Rows Delta | Actions Taken | Business Justification |\n"
+    md += "## 1. Tổng Hợp Các Hành Động Làm Sạch (Summary of Cleaning Actions)\n\n"
+    md += "| Tên bảng | Dòng gốc (Raw) | Dòng sạch (Cleaned) | Độ lệch (Delta) | Thao tác kỹ thuật thực hiện | Căn cứ nghiệp vụ |\n"
     md += "| :--- | :--- | :--- | :--- | :--- | :--- |\n"
-    
+
     for _, row in df_log.iterrows():
         md += f"| **{row['Table']}** | {row['Raw Rows']} | {row['Cleaned Rows']} | {row['Rows Delta']} | {row['Actions Taken']} | {row['Business Justification']} |\n"
 
-    md += "\n## 2. Key Data Engineering Highlights\n\n"
+    md += "\n## 2. Các Điểm Nổi Bật về Kỹ Thuật Xử Lý Dữ Liệu\n\n"
     md += "1. **Triệt tiêu nhân dòng (Zero Row Multiplication):** Bảng Geolocation (hơn 1 triệu dòng) được gom nhóm (aggregate) theo 19,010 zip code duy nhất với giá trị tọa độ trung vị (median). Bảng Review được lọc giữ lại review mới nhất cho mỗi order.\n"
     md += "2. **Giải quyết dứt điểm bản dịch thiếu:** Đã bổ sung bản dịch tiếng Anh cho `pc_gamer` và `portateis_cozinha_e_preparadores_de_alimentos` theo đúng cam kết trong Business Problem.\n"
     md += "3. **Feature Engineering sẵn sàng cho Business Questions:** Đã tính toán chuẩn hóa `actual_delivery_days`, `delivery_delay_days`, `is_delayed`, `delay_bucket`, `is_interstate` để phục vụ trực tiếp phân tích tương quan giữa giao hàng trễ và điểm hài lòng khách hàng.\n"
     md += "4. **Master Dataset:** Tạo bảng tích hợp `olist_master_analytical_dataset.csv` giúp việc kết nối vào Power BI / Jupyter Notebook trở nên cực kỳ thuận tiện và an toàn.\n"
+    md += "5. **Cờ hợp lệ & chuẩn hóa ngày:** `is_valid_delivered` (status = delivered và có ngày giao khách) và `is_valid_delivery_delay` (thêm điều kiện có ngày giao dự kiến; tập chuẩn 96,470 đơn) là hai cờ kiểm soát cohort; mọi chỉ số độ trễ và KPI order-level dùng `is_valid_delivery_delay = 1` làm mẫu số, sau khi chuẩn hóa ngày bằng `dt.normalize()`.\n"
 
     doc_path = os.path.join(DOCS_DIR, '05_data_cleaning_log.md')
     with open(doc_path, 'w', encoding='utf-8') as f:

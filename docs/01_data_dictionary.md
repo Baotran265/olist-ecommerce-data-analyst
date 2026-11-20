@@ -1,6 +1,7 @@
-# DATA DICTIONARY
+# TỪ ĐIỂN DỮ LIỆU DỰ ÁN (DATA DICTIONARY)
 
-> File này được tự động sinh ra từ `src/01_data_understanding.py` dựa trên dữ liệu thực tế.
+> Tài liệu này mô tả chi tiết từ điển dữ liệu, ý nghĩa nghiệp vụ, cấu trúc grain và kiểu dữ liệu của 9 bảng dữ liệu Olist.
+> Được sinh ra từ quy trình khám phá dữ liệu `src/01_data_understanding.py`.
 
 ## Customers (`olist_customers_dataset.csv`)
 
@@ -39,29 +40,6 @@
 | geolocation_lng | float64 | 0 | 0.00% |
 | geolocation_city | str | 0 | 0.00% |
 | geolocation_state | str | 0 | 0.00% |
-
----
-
-## Orders (`olist_orders_dataset.csv`)
-
-- **Purpose:** Lưu trữ thông tin chính của đơn hàng, trạng thái và các mốc thời gian.
-- **Business Meaning / Grain:** Mỗi dòng đại diện cho một đơn hàng (order) được đặt trên platform.
-- **Total Rows:** 99,441
-- **Total Columns:** 8
-- **Primary Key Candidate(s):** order_id, customer_id
-
-### Columns & Data Types
-
-| Column Name | Data Type | Missing Values | % Missing |
-| :--- | :--- | :--- | :--- |
-| order_id | str | 0 | 0.00% |
-| customer_id | str | 0 | 0.00% |
-| order_status | str | 0 | 0.00% |
-| order_purchase_timestamp | str | 0 | 0.00% |
-| order_approved_at | str | 160 | 0.16% |
-| order_delivered_carrier_date | str | 1,783 | 1.79% |
-| order_delivered_customer_date | str | 2,965 | 2.98% |
-| order_estimated_delivery_date | str | 0 | 0.00% |
 
 ---
 
@@ -126,6 +104,29 @@
 | review_comment_message | str | 58,247 | 58.70% |
 | review_creation_date | str | 0 | 0.00% |
 | review_answer_timestamp | str | 0 | 0.00% |
+
+---
+
+## Orders (`olist_orders_dataset.csv`)
+
+- **Purpose:** Lưu trữ thông tin chính của đơn hàng, trạng thái và các mốc thời gian.
+- **Business Meaning / Grain:** Mỗi dòng đại diện cho một đơn hàng (order) được đặt trên platform.
+- **Total Rows:** 99,441
+- **Total Columns:** 8
+- **Primary Key Candidate(s):** order_id, customer_id
+
+### Columns & Data Types
+
+| Column Name | Data Type | Missing Values | % Missing |
+| :--- | :--- | :--- | :--- |
+| order_id | str | 0 | 0.00% |
+| customer_id | str | 0 | 0.00% |
+| order_status | str | 0 | 0.00% |
+| order_purchase_timestamp | str | 0 | 0.00% |
+| order_approved_at | str | 160 | 0.16% |
+| order_delivered_carrier_date | str | 1,783 | 1.79% |
+| order_delivered_customer_date | str | 2,965 | 2.98% |
+| order_estimated_delivery_date | str | 0 | 0.00% |
 
 ---
 

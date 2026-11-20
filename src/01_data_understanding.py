@@ -1,6 +1,10 @@
 import os
+import sys
 import pandas as pd
 import numpy as np
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # ==========================================
 # 1. CONFIGURATION
@@ -68,7 +72,7 @@ def get_table_stats(df):
     total_rows = len(df)
     total_cols = len(df.columns)
     missing = df.isnull().sum().to_dict()
-    
+
     # Tìm candidate Primary Key (cột có số unique = total_rows và không có missing)
     pk_candidates = []
     for col in df.columns:
@@ -76,7 +80,7 @@ def get_table_stats(df):
         missing_count = df[col].isnull().sum()
         if unique_count == total_rows and missing_count == 0:
             pk_candidates.append(col)
-            
+
     return {
         'rows': total_rows,
         'cols': total_cols,
@@ -87,12 +91,12 @@ def get_table_stats(df):
 
 def check_referential_integrity(df_source, col_source, df_target, col_target):
     """
-    Kiểm tra xem các khóa ở bảng nguồn (Foreign Key - Bảng con) 
+    Kiểm tra xem các khóa ở bảng nguồn (Foreign Key - Bảng con)
     có tồn tại ở bảng đích (Primary Key - Bảng cha) không.
     """
     source_values = set(df_source[col_source].dropna().unique())
     target_values = set(df_target[col_target].dropna().unique())
-    
+
     missing_in_target = source_values - target_values
     return {
         'total_source_keys': len(source_values),
@@ -105,28 +109,29 @@ def check_referential_integrity(df_source, col_source, df_target, col_target):
 # ==========================================
 def main():
     print("Starting Phase 1: Data Understanding...")
-    
-    # Load all dataframes
+
+    # Load all dataframes (sắp xếp tên file để thứ tự bảng trong tài liệu ổn định)
     dfs = {}
-    for file in os.listdir(RAW_DATA_DIR):
+    for file in sorted(os.listdir(RAW_DATA_DIR)):
         if file.endswith('.csv'):
             dfs[file] = pd.read_csv(os.path.join(RAW_DATA_DIR, file))
-            
+
     # --- GENERATE 01_data_dictionary.md ---
-    md_content = "# DATA DICTIONARY\n\n"
-    md_content += "> File này được tự động sinh ra từ `src/01_data_understanding.py` dựa trên dữ liệu thực tế.\n\n"
-    
+    md_content = "# TỪ ĐIỂN DỮ LIỆU DỰ ÁN (DATA DICTIONARY)\n\n"
+    md_content += f"> Tài liệu này mô tả chi tiết từ điển dữ liệu, ý nghĩa nghiệp vụ, cấu trúc grain và kiểu dữ liệu của {len(dfs)} bảng dữ liệu Olist.\n"
+    md_content += "> Được sinh ra từ quy trình khám phá dữ liệu `src/01_data_understanding.py`.\n\n"
+
     for file, df in dfs.items():
         info = TABLE_INFO.get(file, {'name': file.replace('.csv', ''), 'purpose': 'N/A', 'business_meaning': 'N/A'})
         stats = get_table_stats(df)
-        
+
         md_content += f"## {info['name']} (`{file}`)\n\n"
         md_content += f"- **Purpose:** {info['purpose']}\n"
         md_content += f"- **Business Meaning / Grain:** {info['business_meaning']}\n"
         md_content += f"- **Total Rows:** {stats['rows']:,}\n"
         md_content += f"- **Total Columns:** {stats['cols']}\n"
         md_content += f"- **Primary Key Candidate(s):** {', '.join(stats['pk_candidates']) if stats['pk_candidates'] else 'None (Composite key or no unique ID)'}\n\n"
-        
+
         md_content += "### Columns & Data Types\n\n"
         md_content += "| Column Name | Data Type | Missing Values | % Missing |\n"
         md_content += "| :--- | :--- | :--- | :--- |\n"
@@ -141,9 +146,9 @@ def main():
     print("Created: docs/01_data_dictionary.md")
 
     # --- GENERATE 02_data_relationships.md ---
-    md_rel = "# DATA RELATIONSHIPS & INTEGRITY CHECK\n\n"
-    md_rel += "> Kết quả kiểm tra Referential Integrity giữa các bảng.\n\n"
-    
+    md_rel = "# QUAN HỆ DỮ LIỆU & KIỂM TOÁN TÍNH TOÀN VẸN (DATA RELATIONSHIPS & INTEGRITY CHECK)\n\n"
+    md_rel += "> Kết quả kiểm tra tính toàn vẹn tham chiếu (Referential Integrity) giữa các bảng trong cơ sở dữ liệu.\n\n"
+
     # Define relationships to check (Child/Source -> Parent/Target)
     relationships = [
         ('olist_order_items_dataset.csv', 'order_id', 'olist_orders_dataset.csv', 'order_id'),
@@ -154,30 +159,34 @@ def main():
         ('olist_order_items_dataset.csv', 'product_id', 'olist_products_dataset.csv', 'product_id'),
         ('olist_products_dataset.csv', 'product_category_name', 'product_category_name_translation.csv', 'product_category_name')
     ]
-    
-    md_rel += "## Referential Integrity Checks\n\n"
-    md_rel += "| Child Table (Source) | Foreign Key | Parent Table (Target) | Primary Key | Total Child Keys | Missing in Parent | Status |\n"
+
+    md_rel += "## 1. Kiểm toán Toàn vẹn Tham chiếu (Referential Integrity Checks)\n\n"
+    md_rel += "| Bảng con (Child Table) | Khóa ngoại (FK) | Bảng cha (Parent Table) | Khóa chính (PK) | Tổng số khóa con | Thiếu ở bảng cha | Trạng thái |\n"
     md_rel += "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n"
-    
+
     for child_file, child_col, parent_file, parent_col in relationships:
         if child_file in dfs and parent_file in dfs:
-            # GỌI HÀM VÀ LẤY KEY ĐÚNG: total_source_keys và missing_in_target
             res = check_referential_integrity(dfs[child_file], child_col, dfs[parent_file], parent_col)
-            status = "✅ VALID" if res['is_valid'] else "⚠️ ORPHAN RECORDS FOUND"
+            if res['is_valid']:
+                status = "✅ HỢP LỆ (VALID)"
+            elif parent_file == 'product_category_name_translation.csv':
+                status = "⚠️ THIẾU BẢN DỊCH (Xử lý bổ sung ở Phase 4)"
+            else:
+                status = "⚠️ PHÁT HIỆN BẢN GHI MỒ CÔI (ORPHAN)"
             md_rel += f"| {child_file} | {child_col} | {parent_file} | {parent_col} | {res['total_source_keys']:,} | {res['missing_in_target']:,} | {status} |\n"
-            
-    md_rel += "\n## Critical Grain Warnings\n\n"
-    md_rel += "1. **Geolocation Table:** Bảng `olist_geolocation_dataset` có grain là **1 dòng = 1 điểm tọa độ**. Một `geolocation_zip_code_prefix` có thể xuất hiện **nhiều lần** (nhiều lat/lng khác nhau cho cùng 1 zip code). \n"
-    md_rel += "   - **Rủi ro:** Nếu join trực tiếp bảng này với `customers` hoặc `sellers` qua zip code, sẽ gây ra **ROW MULTIPLICATION** (nhân dòng) làm sai lệch hoàn toàn số liệu.\n"
-    md_rel += "   - **Giải pháp:** Chỉ sử dụng bảng này để lấy thông tin city/state nếu cần, hoặc phải group by zip code trước khi join.\n\n"
-    md_rel += "2. **Order Items / Payments / Reviews:** Các bảng này có grain nhỏ hơn bảng `orders` (1 order có nhiều items, nhiều payments, hoặc không có review).\n"
-    md_rel += "   - **Rủi ro:** Join cả 3 bảng này lại với nhau sẽ gây ra **CROSS JOIN / ROW MULTIPLICATION** nghiêm trọng.\n"
-    md_rel += "   - **Giải pháp:** Luôn aggregate (group by order_id) các bảng con này về grain của `orders` trước khi join, hoặc xây dựng Fact table riêng biệt.\n"
+
+    md_rel += "\n## 2. Cảnh báo Nghiệp vụ về Grain & Rủi ro Nhân dòng (Critical Grain Warnings)\n\n"
+    md_rel += "1. **Bảng Địa lý (Geolocation):** Bảng `olist_geolocation_dataset` có grain là **1 dòng = 1 điểm tọa độ**. Một `geolocation_zip_code_prefix` có thể xuất hiện **nhiều lần** (nhiều cặp lat/lng khác nhau cho cùng một mã zip code). \n"
+    md_rel += "   - **Rủi ro:** Nếu liên kết trực tiếp bảng này với `customers` hoặc `sellers` qua zip code mà không khử trùng lặp, sẽ gây ra **LỖI NHÂN DÒNG (Row Multiplication)** làm sai lệch hoàn toàn số liệu doanh thu và sản lượng.\n"
+    md_rel += "   - **Giải pháp:** Gom nhóm (aggregate) bảng Geolocation theo từng zip code duy nhất với giá trị tọa độ trung vị (median) ở Phase 4 trước khi tích hợp vào Dimension tables.\n\n"
+    md_rel += "2. **Các bảng chi tiết (Order Items / Payments / Reviews):** Các bảng này có grain chi tiết hơn bảng `orders` (1 đơn hàng có thể chứa nhiều sản phẩm, nhiều kỳ thanh toán hoặc không có đánh giá).\n"
+    md_rel += "   - **Rủi ro:** Thực hiện phép kết nối (JOIN) ngang giữa 3 bảng này sẽ dẫn đến tích đề-các (Cross Join) gây nhân dòng nghiêm trọng.\n"
+    md_rel += "   - **Giải pháp:** Luôn tổng hợp dữ liệu về đúng grain trước khi liên kết, hoặc phân tách thành Fact Table (Items) và Dimension Tables trong mô hình Kimball Star Schema.\n"
 
     with open(os.path.join(DOCS_DIR, '02_data_relationships.md'), 'w', encoding='utf-8') as f:
         f.write(md_rel)
     print("Created: docs/02_data_relationships.md")
-    
+
     print("\nPHASE 1 COMPLETED SUCCESSFULLY.")
 
 if __name__ == "__main__":

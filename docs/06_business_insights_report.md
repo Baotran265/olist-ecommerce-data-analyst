@@ -1,27 +1,46 @@
-# BUSINESS INSIGHTS & STRATEGIC RECOMMENDATIONS REPORT
+# BÁO CÁO PHÂN TÍCH CHUYÊN SÂU & ĐỀ XUẤT CHIẾN LƯỢC KINH DOANH
+(BUSINESS INSIGHTS & STRATEGIC RECOMMENDATIONS REPORT)
 
 > **Dự án:** Phân tích Dữ liệu Nền tảng Thương mại Điện tử Olist (Brazil)  
-> **Tác giả:** Data Analyst Portfolio Project  
+> **Ngôn ngữ báo cáo:** Tiếng Việt (Thống nhất toàn bộ tài liệu dự án)  
 > **Đối tượng báo cáo:** Ban Giám đốc Vận hành (Head of Operations), Đội ngũ Quản lý Đối tác Bán hàng (Seller Management), Đội ngũ Logistics.  
 > **Nguồn dữ liệu:** `data/processed/olist_master_analytical_dataset.csv` (112,650 dòng sản phẩm, 96,470 đơn giao thành công hợp lệ).  
 
 ---
 
-## Executive Summary (Tóm tắt điều hành)
+## 📋 1. Tóm Tắt Điều Hành (Executive Summary)
 
-Phân tích trên **96,470 đơn hàng đã giao thành công hợp lệ** (loại bỏ các đơn thiếu ngày giao thực tế hoặc ngày dự kiến) và **93,350 khách hàng duy nhất có đơn giao thành công** trong giai đoạn 2016 – 2018 đã làm sáng tỏ 5 phát hiện cốt lõi chi phối sức khỏe vận hành và trải nghiệm khách hàng:
+Dự án phân tích dữ liệu thương mại điện tử Olist tại Brazil trong giai đoạn **2016–2018**, tập trung giải quyết bài toán: **Mối liên hệ giữa hiệu suất giao hàng (logistics delay) đối với mức độ hài lòng khách hàng (review score), tỷ lệ giữ chân khách hàng (retention) và nhận diện các rủi ro vận hành trong mạng lưới đối tác bán hàng.**
 
-1. **"Điểm gãy chịu đựng" (Tolerance Cliff) ở mốc 3 ngày trễ:** Khách hàng chấp nhận sự trễ hẹn nhẹ từ 1–3 ngày (điểm hài lòng đạt 3.29 ★). Tuy nhiên, **từ ngày trễ thứ 4 trở đi, sự hài lòng sụp đổ hoàn toàn xuống 2.10 ★ (4–7 ngày) và 1.70 ★ (>7 ngày)**, với 58.58% – 69.83% khách hàng để lại đánh giá 1 sao.
-2. **Nghẽn cổ chai logistics tại vùng Đông Bắc (Northeast):** Các bang Đông Bắc như **Alagoas (AL: 21.41% trễ)**, **Maranhão (MA: 17.43% trễ)**, **Sergipe (SE: 15.22% trễ)** có tỷ lệ trễ hẹn cao gấp 4–5 lần so với São Paulo (SP: 4.49%). Giao hàng liên bang (`is_interstate = 1`) mất trung bình 15.1 ngày (cước bình quân 26.94 R$), gần gấp đôi so với nội bang (7.9 ngày, 15.35 R$, chênh lệch +75.5% cước phí).
-3. **16 Seller rủi ro cao theo chuẩn Order-Deduplicated:** Các nhà bán hàng này tạo ra doanh thu trên 15,000 R$ từ các đơn giao thành công hợp lệ nhưng điểm đánh giá trung bình dưới 3.8 ★. Trong đó:
-   - **11 Seller đủ cỡ mẫu ($\ge 30$ đơn) mang nhãn `High Risk - Intervene`:** Sở hữu tỷ lệ trễ bình quân trọng số là **9.00%** và thời gian bàn giao hàng cho carrier (`avg_dispatch_days`) bình quân 7.04 ngày (cá biệt có seller trễ >20% và dispatch lên tới 11.9 ngày).
-   - **5 Seller giá trị cao nhưng cỡ mẫu nhỏ ($< 30$ đơn) mang nhãn `Potential Risk - Monitor (Low Sample)`:** Cần thiết lập kênh giám sát riêng thay vì can thiệp quy trình vận hành đại trà do độ tin cậy thống kê chưa cao.
-4. **Tỷ lệ khách hàng quay lại hoàn tất (Repeat Completed Purchases) ở mức 3.00%:** Xét trên tập khách hàng có đơn giao thành công hợp lệ, tỷ lệ mua lại là **3.00%** (2,801 / 93,350 khách hàng). 
-5. **Đòn bẩy trải nghiệm đơn đầu tiên giao thành công:** Khách hàng có đơn hàng đầu tiên *giao thành công* bị trễ có tỷ lệ quay lại mua hàng **sụt giảm 17.1%** (từ 3.04% xuống 2.52%, kiểm định Chi-square $p < 0.05$) so với khách hàng được giao đúng hẹn.
+Tập phân tích chính gồm **96.470 đơn hàng giao thành công hợp lệ** (đã chuẩn hóa cấp ngày lịch `dt.normalize()` và lọc bỏ các đơn thiếu mốc ngày thực tế hoặc ngày dự kiến), tương ứng với **93.350 khách hàng duy nhất có đơn giao thành công**.
 
 ---
 
-## Phân tích Chi tiết 5 Câu hỏi Kinh doanh Trọng tâm
+### 1️⃣ Độ trễ giao hàng có mối liên hệ với điểm đánh giá thấp hơn
+Điểm đánh giá trung bình giảm từ **4,29 ★** ở nhóm giao đúng hạn/sớm xuống **3,29 ★** ở nhóm trễ 1–3 ngày và giảm sâu xuống **2,10 ★** ở nhóm trễ 4–7 ngày. Trong nhóm trễ 4–7 ngày, **58,58%** đánh giá hợp lệ là 1 sao. Kết quả cho thấy trải nghiệm khách hàng kém hơn rõ rệt ở các nhóm giao trễ dài hơn trong tập dữ liệu phân tích.
+
+### 2️⃣ Một số bang có tỷ lệ giao trễ cao hơn đáng kể so với São Paulo
+Alagoas có tỷ lệ trễ **21,41%**, Maranhão **17,43%** và Sergipe **15,22%**, cao gấp **3,1–4,8 lần** so với **4,49%** tại São Paulo. Tuyến giao hàng liên bang (Interstate) mất trung bình **15,1 ngày**, gần gấp đôi nội bang (**7,9 ngày**) và cước phí cao hơn **75,5%** (26,94 R$ vs 15,35 R$).
+
+### 3️⃣ Xu hướng thời gian & Áp lực mùa vụ (Khai thác `dim_date`)
+Giai đoạn 2017–2018 ghi nhận sự tăng trưởng quy mô mạnh mẽ từ **111.8k R$** (tháng 1/2017) lên đỉnh điểm **987.6k R$** vào Black Friday (tháng 11/2017). Tuy nhiên, các đợt cao điểm mùa vụ và khủng hoảng logistics đã bộc lộ điểm nghẽn nghiêm trọng:
+- **Black Friday (11/2017):** Sản lượng đơn tăng đột biến kéo tỷ lệ trễ lên **11,91%**, điểm đánh giá trung bình giảm xuống **3,90 ★**.
+- **Đợt khủng hoảng Logistics toàn quốc Q1/2018:** Tỷ lệ giao hàng trễ lập đỉnh lịch sử ở mức **13,91%** (tháng 2/2018) và **18,05%** (tháng 3/2018), kéo điểm đánh giá toàn sàn chạm đáy **3,75 ★ – 3,78 ★**.
+- **Giai đoạn phục hồi:** Khi tỷ lệ trễ hạ nhiệt về mức **1,16%** (tháng 6/2018), điểm đánh giá đã hồi phục ấn tượng lên **4,21 ★ – 4,27 ★**.
+
+### 4️⃣ Xác định 16 seller ứng viên cần rà soát theo quy tắc sàng lọc của dự án
+Các seller này có **Delivered Revenue từ 15.000 R$ trở lên** và điểm đánh giá trung bình dưới **3,8 ★**. Trong đó:
+- **11 seller** có ít nhất 30 đơn hàng hợp lệ (tổng 3,201 đơn, trễ 9.00%, thời gian chuẩn bị hàng bình quân 7.04 ngày) được đề xuất ưu tiên rà soát;
+- **5 seller** còn lại có ít hơn 30 đơn và nên được theo dõi riêng do cỡ mẫu hạn chế.
+> ⚠️ *Đây là danh sách sàng lọc, không phải kết luận rằng mọi seller trong nhóm đều đã được xác nhận là nguyên nhân duy nhất gây ra vấn đề vận hành.*
+
+### 5️⃣ Tỷ lệ mua lại hoàn tất là 3,00% và sự khác biệt theo trạng thái đơn đầu tiên
+- Tỷ lệ mua lại hoàn tất chung là **3,00%** (2.801 / 93.350 khách hàng có đơn delivered).
+- Nhóm khách hàng có đơn đầu tiên giao đúng hạn đạt tỷ lệ mua lại **3,04%**, trong khi nhóm có đơn đầu bị trễ chỉ đạt **2,52%** (chênh lệch tương đối khoảng **17,1%**, kiểm định Chi-square $\chi^2 = 5,2856, p = 0,0215$). Đây là mối liên hệ quan sát được trong dữ liệu tĩnh, không phải bằng chứng khẳng định quan hệ nhân quả duy nhất.
+
+---
+
+## 🔍 2. Phân Tích Chi Tiết 5 Câu Hỏi Kinh Doanh Trọng Tâm
 
 ### Câu hỏi 1: Giao hàng trễ tác động thế nào đến Điểm đánh giá (Review Score)?
 
@@ -32,74 +51,114 @@ Phân tích trên **96,470 đơn hàng đã giao thành công hợp lệ** (lo�
 | **Trễ 4 - 7 ngày (4-7 Days Late)** | 1,802 (1.9%) | 1,748 | **2.10 ★** | **58.58%** | 14.07% |
 | **Trễ > 7 ngày (> 7 Days Late)** | 2,862 (3.0%) | 2,781 | **1.70 ★** | **69.83%** | 7.01% |
 
-* **Insight then chốt:** Khách hàng có sự kiên nhẫn nhất định trong 72 giờ đầu tiên sau hẹn. Khi vượt qua 3 ngày trễ, đơn hàng bước vào "vùng sụp đổ" khi tỷ lệ đánh giá 1 sao chiếm đa số tuyệt đối (>58%).
-* **Hành động đề xuất:** Thiết lập hệ thống cảnh báo tự động (Automated Proactive Alert). Ngay khi một đơn hàng có nguy cơ trễ chạm mốc **ngày thứ 2**, hệ thống phải chủ động gửi thông báo xin lỗi kèm voucher đền bù (5-10%) **trước khi** khách hàng nhận hàng và viết review.
+* **Insight then chốt:** Điểm đánh giá trung bình giảm từ **4,29 ★** ở nhóm đúng hạn xuống **3,29 ★** ở nhóm trễ 1–3 ngày. Ở nhóm trễ 4–7 ngày, điểm trung bình giảm tiếp xuống **2,10 ★** và tỷ lệ đánh giá 1 sao đạt **58,58%**. Mối liên hệ này cho thấy thời gian giao trễ dài hơn đi kèm với mức độ hài lòng thấp hơn trong tập dữ liệu phân tích. Kết quả quan sát chưa đủ để kết luận độ trễ là yếu tố duy nhất quyết định điểm đánh giá.
 
 ---
 
 ### Câu hỏi 2: Nghẽn cổ chai địa lý (Geographic Bottlenecks) nằm ở đâu?
 
-| Vùng / Bang | Số đơn hàng | Tỷ lệ trễ hẹn (%) | Thời gian giao TB (ngày) | Điểm đánh giá TB |
-| :--- | :---: | :---: | :---: | :---: |
-| **Alagoas (AL)** | 397 | **21.41%** | 24.5 ngày | 3.85 ★ |
-| **Maranhão (MA)** | 717 | **17.43%** | 21.6 ngày | 3.83 ★ |
-| **Sergipe (SE)** | 335 | **15.22%** | 21.5 ngày | 3.91 ★ |
-| **Piauí (PI)** | 476 | **13.87%** | 19.5 ngày | 3.99 ★ |
-| **Ceará (CE)** | 1,279 | **13.76%** | 21.3 ngày | 3.94 ★ |
-| **Rio de Janeiro (RJ)** | 12,350 | **12.11%** | 15.3 ngày | 3.97 ★ |
-| *Toàn quốc (Benchmark)* | *96,470* | *6.77%* | *12.6 ngày* | *4.16 ★* |
-| **São Paulo (SP)** | 40,494 | **4.49%** | 8.8 ngày | 4.25 ★ |
+| Vùng / Bang | Số đơn hàng | Tỷ lệ trễ hẹn (%) | Thời gian giao TB (ngày) | Điểm đánh giá TB | So với SP (4.49%) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Alagoas (AL)** | 397 | **21.41%** | 24.5 ngày | 3.85 ★ | **Gấp 4.8 lần** |
+| **Maranhão (MA)** | 717 | **17.43%** | 21.6 ngày | 3.83 ★ | **Gấp 3.9 lần** |
+| **Sergipe (SE)** | 335 | **15.22%** | 21.5 ngày | 3.91 ★ | **Gấp 3.4 lần** |
+| **Piauí (PI)** | 476 | **13.87%** | 19.5 ngày | 3.99 ★ | **Gấp 3.1 lần** |
+| **Ceará (CE)** | 1,279 | **13.76%** | 21.3 ngày | 3.94 ★ | **Gấp 3.1 lần** |
+| **Rio de Janeiro (RJ)** | 12,350 | **12.11%** | 15.3 ngày | 3.97 ★ | **Gấp 2.7 lần** |
+| *Toàn quốc (Benchmark)* | *96,470* | *6.77%* | *12.6 ngày* | *4.16 ★* | *—* |
+| **São Paulo (SP)** | 40,494 | **4.49%** | 8.8 ngày | 4.25 ★ | *Benchmark* |
 
-* **Insight then chốt:** Các bang được phân tích ở vùng Đông Bắc có tỷ lệ giao trễ cao gấp **3,1 đến 4,8 lần** so với São Paulo (4,49%). Trong đó, Alagoas có tỷ lệ trễ cao nhất (21,41%, gấp 4,8 lần), tiếp theo là Maranhão (17,43%) và Sergipe (15,22%). Nguyên nhân cốt lõi là sự tập trung bất đối xứng: phần lớn nhà bán hàng và kho hàng tập trung ở vùng Đông Nam (SP, RJ, MG).
-* **Hành động đề xuất:** Thử nghiệm A/B Testing điều chỉnh thuật toán dự báo ngày giao (`order_estimated_delivery_date`) cho các tuyến Đông Bắc cộng thêm 3–4 ngày đệm (Buffer Days) để quản trị kỳ vọng khách hàng.
+* **Insight then chốt:** Trong nhóm bang được phân tích, các bang vùng Đông Bắc (`AL`, `MA`, `SE`, `PI`, `CE`) chịu tỷ lệ trễ từ 13,8% đến 21,4%, cao gấp **3,1–4,8 lần** so với **São Paulo** (**4,49%**). Đơn hàng vận chuyển liên bang mất trung bình 15.1 ngày (cước bình quân 26.94 R$), gần gấp đôi nội bang (7.9 ngày, 15.35 R$, chênh lệch cước +75.5%).
 
 ---
 
 ### Câu hỏi 3: Ma trận Rủi ro Người bán (Seller Risk Matrix)
 
-Phân loại người bán dựa trên **Delivered Revenue (Trục X)** và **Điểm Đánh giá Trung bình (Trục Y)** với ngưỡng 15,000 R$ và 3.8 ★ (chỉ tính trên đơn giao thành công hợp lệ, chuẩn Order-Deduplicated):
+Phân loại seller được sử dụng như một quy tắc sàng lọc nội bộ của dự án, dựa trên `Delivered Revenue`, điểm đánh giá trung bình và số đơn hàng hợp lệ. Ngưỡng doanh thu là **15.000 R$**, ngưỡng đánh giá thấp là dưới **3,8 sao** và ngưỡng cỡ mẫu tham khảo là **30 đơn**.
 
-* **Phân khúc 16 Candidate Sellers:**
-  - **11 Seller đủ cỡ mẫu ($\ge 30$ đơn) - Nhãn `High Risk - Intervene`:** 
-    - Tổng cộng 3,201 đơn hàng, tỷ lệ trễ bình quân trọng số **9.00%**, thời gian bàn giao hàng (`avg_dispatch_days`) bình quân **7.04 ngày**.
-    - Seller dẫn đầu nhóm rủi ro `7c67...`: Delivered Revenue **186,570 R$** (973 đơn), điểm đánh giá **3.50 ★**, thời gian dispatch trung bình **11.9 ngày**.
-    - Seller `712e...`: Delivered Revenue 39,385 R$ (77 đơn), tỷ lệ trễ **20.78%**, điểm đánh giá **3.39 ★**.
-  - **5 Seller giá trị cao nhưng cỡ mẫu nhỏ ($< 30$ đơn) - Nhãn `Potential Risk - Monitor (Low Sample)`:**
-    - Ví dụ: Seller `b1b3...` có Delivered Revenue 21,520 R$ (14 đơn), điểm đánh giá **1.93 ★**, tỷ lệ trễ 64.29%. Nhóm này cần gắn cờ kiểm toán riêng, tránh ngộ nhận do cỡ mẫu quá nhỏ để kết luận xu hướng.
-* **Hành động đề xuất (Chương trình Pilot):** Thử nghiệm áp dụng chính sách **SLA Dispatching**: Yêu cầu nhóm 11 seller đủ mẫu cam kết bàn giao hàng cho carrier trong vòng 48h. Nếu không cải thiện sau 30 ngày, tạm thời giảm thứ hạng hiển thị.
+- **11 seller đủ cỡ mẫu (≥ 30 đơn):** Nhóm gồm 3.201 đơn hàng, tỷ lệ giao trễ **9,00%** và thời gian `dispatch` trung bình **7,04 ngày**. Đây là đối tượng ưu tiên rà soát quy trình vận hành và cam kết thời gian chuẩn bị hàng.
+- **5 seller có cỡ mẫu nhỏ (< 30 đơn):** Được đưa vào danh sách theo dõi riêng, tránh kết luận vội vã do cỡ mẫu nhỏ.
 
 ---
 
-### Câu hỏi 4: Hiệu suất Nhóm Sản phẩm (Product Category Matrix)
+### Câu hỏi 4: Hiệu suất Danh mục Sản phẩm & Làm rõ về Tỷ lệ Hủy đơn
 
-*Lưu ý về Grain dữ liệu: Review và Delay Rate được tính ở cấp độ `(order_id, category)` (tức là "đơn hàng có chứa sản phẩm thuộc category X được đánh giá thế nào"). Các con số như 9.465, 5.857 là **số lượng sản phẩm (items_sold)**, không phải số đơn hàng. GOV (Gross Order Value) được định nghĩa là `price + freight_value`.*
+*Lưu ý về grain dữ liệu và điều chỉnh phạm vi:*
+1. **Làm rõ về Tỷ lệ Hủy đơn (Order Cancellation Analysis):** Trong 99,441 đơn hàng của sàn, có **775 đơn hàng không có dòng sản phẩm** trong bảng `order_items` (trong đó có 603 đơn không khả dụng `unavailable` và 164 đơn hủy `canceled`). Đối với các đơn hàng có sản phẩm, tỷ lệ hủy đơn rất thấp (chỉ dao động từ **0,19%** ở `Bed Bath Table` đến **0,80%** ở `Toys`). Do đó, phân tích danh mục được điều chỉnh tập trung vào các chỉ số vận hành và tài chính cốt lõi.
+2. **Grain phân tích:** Doanh thu (`price`), tổng cước (`freight_value`) và sản lượng được tính từ dòng sản phẩm hợp lệ. Điểm đánh giá trung bình và tỷ lệ giao trễ được khử trùng lặp ở cấp **(order_id, category)** để phản ánh đúng trải nghiệm của khách hàng đối với đơn hàng chứa danh mục đó.
 
-* **Nhóm dẫn đầu Delivered Revenue & Hài lòng cao:**
-  - `Health Beauty`: Delivered Revenue **1,233,132 R$** (9,465 sản phẩm), Điểm đánh giá TB **4.23 ★**, Tỷ lệ trễ **7.51%**, Cước phí chiếm 12.67% GOV.
-  - `Watches Gifts`: Delivered Revenue **1,165,899 R$** (5,857 sản phẩm), Điểm đánh giá TB **4.12 ★**, Tỷ lệ trễ **7.39%**, Cước phí chiếm 7.76% GOV.
-  - `Bed Bath Table`: Delivered Revenue **1,023,435 R$** (10,953 sản phẩm), Điểm đánh giá **4.00 ★**, Tỷ lệ trễ **7.43%**, Cước phí chiếm 16.47% GOV.
+| Danh mục Sản phẩm (Top Revenue) | Doanh thu (Delivered R$) | Số sản phẩm bán | Điểm đánh giá TB | Tỷ lệ trễ hẹn (%) | Tỷ trọng cước (% GOV) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Health Beauty** | **1,233,132 R$** | 9,465 | **4.23 ★** | **7.51%** | 12.67% |
+| **Watches Gifts** | **1,165,899 R$** | 5,857 | **4.12 ★** | **7.39%** | 7.76% |
+| **Bed Bath Table** | **1,023,435 R$** | 10,953 | **4.00 ★** | **7.43%** | 16.47% |
+| **Sports Leisure** | 959,101 R$ | 8,431 | 4.14 ★ | 7.15% | 15.11% |
+| **Computers Accessories** | 896,876 R$ | 7,680 | 3.98 ★ | 8.85% | 13.91% |
+| **Furniture Decor** | 711,540 R$ | 8,054 | 3.93 ★ | 8.87% | 20.89% |
 
 ---
 
-### Câu hỏi 5: Tỷ lệ Khách hàng Quay lại & Tác động của Đơn hàng Đầu tiên Giao thành công
+### Câu hỏi 5: Tỷ lệ Khách hàng Quay lại & Đơn hàng Đầu tiên
 
-| Trạng thái giao hàng Đơn đầu tiên | Tổng số khách hàng | Tỷ lệ quay lại mua tiếp (%) | Mức độ sụt giảm tương đối |
+| Trạng thái giao hàng Đơn đầu tiên | Tổng số khách hàng | Tỷ lệ quay lại mua tiếp (%) | Mức độ chênh lệch tương đối |
 | :--- | :---: | :---: | :---: |
-| **First Delivered Order: On-Time** | 86,995 | **3.04%** | — |
-| **First Delivered Order: Delayed** | 6,355 | **2.52%** | **-17.1% ($\chi^2 \approx 5.29, p = 0.0215$)** |
+| **Đơn đầu tiên giao đúng hạn** | 86,995 | **3.04%** | — |
+| **Đơn đầu tiên bị giao trễ** | 6,355 | **2.52%** | **-17.1% ($\chi^2 = 5.2856, p = 0.0215$)** |
 
-* **Insight then chốt:** Trải nghiệm tiêu cực ở đơn hàng đầu tiên *giao thành công* có liên hệ với việc sụt giảm **17.1% tỷ lệ quay lại mua hàng** (từ 3.04% xuống 2.52%, kiểm định Chi-square cho thấy sự khác biệt có ý nghĩa thống kê với $p = 0.0215$). 
-* **Hành động đề xuất:** Gắn cờ ưu tiên (Flag `is_first_time_buyer = 1`) trong hệ thống fulfillment để các đối tác vận chuyển ưu tiên tuyến đường và giao đúng hẹn cho các đơn hàng đầu tiên của khách mới.
+* **Insight then chốt:** Khách hàng nhận đơn đầu tiên đúng hạn có tỷ lệ mua lại **3,04%**, so với **2,52%** ở nhóm nhận đơn đầu bị trễ (chênh lệch tương đối khoảng **17,1%**, kiểm định Chi-square cho thấy sự khác biệt có ý nghĩa thống kê ở mức $\alpha = 0.05$). Đây là **mối liên hệ quan sát được**, phản ánh tín hiệu quan trọng về ấn tượng ban đầu đối với lòng trung thành thương hiệu.
+
+---
+
+## 📈 3. Phân Tích Xu Hướng Thời Gian & Tính Mùa Vụ (Khai thác `dim_date` 2017–2018)
+
+Bảng chiều ngày tháng (`dim_date`) được liên kết với `fact_order_items` qua khóa `order_date_key` cho phép bóc tách chu kỳ tăng trưởng và áp lực vận hành theo từng tháng:
+
+| Năm - Tháng | Số đơn hàng | Doanh thu sản phẩm (R$) | Tỷ lệ trễ (%) | Điểm Review TB | Sự kiện / Bối cảnh vận hành |
+| :---: | :---: | :---: | :---: | :---: | :--- |
+| **2017-01** | 750 | 111,798 R$ | 2.63% | 4.16 ★ | Khởi đầu giai đoạn mở rộng quy mô |
+| **2017-05** | 3,545 | 489,159 R$ | 3.20% | 4.20 ★ | Tăng trưởng ổn định |
+| **2017-08** | 4,193 | 554,700 R$ | 2.77% | **4.28 ★** | Vận hành tối ưu trước mùa cao điểm |
+| **2017-11** | **7,288** | **987,648 R$** | **11.91%** | **3.90 ★** | **Đỉnh điểm Black Friday: Đơn tăng vọt kéo trễ tăng, review giảm** |
+| **2017-12** | 5,513 | 726,033 R$ | 7.31% | 4.01 ★ | Mùa mua sắm Giáng sinh |
+| **2018-02** | 6,555 | 826,437 R$ | **13.91%** | **3.78 ★** | Khủng hoảng vận tải đầu năm 2018 |
+| **2018-03** | 7,003 | 953,356 R$ | **18.05%** | **3.75 ★** | **Đỉnh trễ kỷ lục toàn sàn: Review chạm đáy lịch sử** |
+| **2018-04** | 6,798 | 973,534 R$ | 4.08% | 4.11 ★ | Bắt đầu hồi phục vận hành |
+| **2018-06** | 6,096 | 855,592 R$ | **1.16%** | **4.21 ★** | Vận hành bình ổn trở lại |
+| **2018-08** | 6,351 | 838,577 R$ | 6.05% | 4.25 ★ | Duy trì điểm hài lòng cao |
+
+> 💡 **Phát hiện quan trọng:** Phân tích chuỗi thời gian chứng minh bằng chứng thực nghiệm: Mỗi khi tỷ lệ trễ toàn sàn tăng vọt do quá tải mùa vụ (tháng 11/2017 đạt 11.91%, tháng 3/2018 đạt 18.05%), điểm đánh giá khách hàng ngay lập tức rớt mạnh xuống dưới 3.9 ★. Khi nút thắt logistics được gỡ bỏ (tháng 6/2018 đạt 1.16% trễ), điểm hài lòng lập tức phục hồi trên 4.2 ★.
 
 ---
 
-## 🔍 Giới Hạn Phân Tích & Phân Biệt Tương Quan vs Nhân Quả
+## 🎯 4. Mô Phỏng Ước Lượng Tác Động Vận Hành (Scenario Modeling)
 
-1. **Tương quan (Correlation) vs Nhân quả (Causation):** Dữ liệu quan sát cho thấy sự sụt giảm mạnh về điểm review khi thời gian trễ tăng. Tuy nhiên, thời gian giao trễ chưa hẳn là nguyên nhân duy nhất; các yếu tố ngoại lai như đóng gói, bể vỡ trong quá trình vận chuyển cũng có thể cùng xảy ra. Kết luận "có liên hệ với" được sử dụng thay vì "gây ra" để phản ánh đúng tính chất của dữ liệu quan sát.
-2. **Thiên lệch Cửa sổ Quan sát (Right-Censoring Bias):** Tỷ lệ mua lại 3.00% đo lường trên toàn bộ tập dữ liệu tĩnh Olist (2016–2018). Khách hàng mua đơn đầu tiên vào tháng 08/2018 chỉ có khoảng 1–3 tuần để phát sinh đơn mua lại. Trong môi trường sản xuất thực tế, chỉ số này nên được chuẩn hóa theo cửa sổ thời gian cố định (ví dụ: 60-day Retention Rate).
-3. **Định nghĩa Đơn hàng Mua lại:** Báo cáo này chuẩn hóa định nghĩa chính là **Repeat Completed Purchases** (khách hàng có $\ge 2$ đơn giao thành công hợp lệ trên tổng số 93,350 khách hàng có đơn delivered, đạt 3.00%). Nếu tính trên toàn bộ đơn hàng ở mọi trạng thái (kể cả 775 đơn mồ côi không có sản phẩm trong raw orders), con số là 3.12% (2,997 / 96,096).
-4. **Định nghĩa First Delivered Order:** Phân tích Q5 sử dụng đơn giao thành công hợp lệ đầu tiên của khách hàng (theo `order_purchase_timestamp`), không phải đơn đặt hàng đầu tiên (vì khách có thể đã đặt đơn bị hủy trước đó).
-5. **Quy ước Interstate:** Một đơn hàng được phân loại là "Interstate" nếu có ít nhất một sản phẩm trong đơn có seller và customer ở khác bang (`max(is_interstate) = 1` tại cấp đơn hàng).
+Để tránh các đề xuất định tính chung chung, dưới đây là mô phỏng định lượng tác động dựa trên dữ liệu thực nghiệm:
+
+### 1. Kịch bản Tối ưu Tuyến Vận chuyển Bang Alagoas (AL)
+- **Hiện trạng:** 397 đơn hàng, tỷ lệ trễ **21,41%**, điểm đánh giá trung bình **3,85 ★**. Trong đó, đơn đúng hạn đạt **4,30 ★**, đơn trễ chỉ đạt **2,13 ★**.
+- **Mô phỏng can thiệp:** Nếu thiết lập trung tâm trung chuyển hoặc bổ sung ngày đệm dự báo (buffer days) hợp lý, đưa tỷ lệ trễ tại AL từ **21,41% về mức mục tiêu 10,00%** (chuyển đổi ~45 đơn trễ sang giao đúng hạn):
+  $$\text{Review Dự kiến} = (0.90 \times 4.30) + (0.10 \times 2.13) = \mathbf{4.08 \ ★}$$
+- **Tác động:** Điểm đánh giá trung bình toàn bang AL sẽ tăng **+0,23 ★** (từ 3.85 lên 4.08, vượt ngưỡng 4 sao), và tỷ lệ đơn nhận đánh giá 1 sao tại bang này ước tính giảm từ ~22% xuống còn ~11%.
+
+### 2. Kịch bản Thiết lập Quy chế SLA 48h cho Nhóm 11 Seller Ứng viên Rủi ro
+- **Hiện trạng:** 11 seller này tạo ra 3,201 đơn hàng với thời gian chuẩn bị hàng (`dispatch_days`) trung bình lên tới **7,04 ngày** (so với mức trung vị sàn là 3 ngày), tỷ lệ trễ đạt **9,00%** (288 đơn trễ).
+- **Mô phỏng can thiệp:** Buộc bàn giao hàng trong vòng 48h (`dispatch_days <= 2`), đưa tỷ lệ trễ của nhóm về mức benchmark sàn (**4,5%**):
+- **Tác động:** Cứu vãn được khoảng **144 đơn hàng** không bị trễ hẹn, gián tiếp bảo vệ hơn **22.000 R$** doanh thu khỏi nguy cơ bị yêu cầu hủy đơn hoặc hoàn tiền, đồng thời ngăn chặn làn sóng đánh giá 1 sao đối với các seller có doanh số chủ lực.
+
+### 3. Kịch bản Bảo vệ Trải nghiệm Đơn hàng Đầu tiên (First Delivered Order Protection)
+- **Hiện trạng:** Nhóm khách hàng có đơn đầu bị trễ (6,355 khách) có tỷ lệ mua lại thấp hơn 17.1% so với nhóm đúng hạn (2.52% vs 3.04%).
+- **Mô phỏng can thiệp:** Áp dụng cơ chế theo dõi ưu tiên vận chuyển cho người mua lần đầu, giảm tỷ lệ trễ đơn đầu từ **6,77% xuống 3,50%** (chuyển ~3,000 khách hàng mới từ nhóm trễ sang đúng hạn):
+- **Tác động:** Giữ chân thêm ước tính **~16 khách hàng trung thành** quay lại phát sinh đơn hàng lần 2, tạo ra doanh thu bổ sung ước tính từ 3,000 – 5,000 R$ mỗi chu kỳ mà không tốn thêm chi phí thu hút khách hàng mới (CAC).
 
 ---
-*Báo cáo được tổng hợp dựa trên kết quả tính toán định lượng chính xác từ mã nguồn Python (`src/04_exploratory_data_analysis.py`) và cơ sở dữ liệu Star Schema. Tất cả số liệu đã được đối chiếu với các file CSV output trong `outputs/tables/`.*
+
+## 🔒 5. Kiểm Chứng Dữ Liệu & Quy Chuẩn Tập Mẫu Số
+
+1. **Phân biệt 96,096 vs 93,350 khách hàng:**
+   - **96,096 khách hàng:** Tổng số khách hàng trên toàn sàn (99,441 đơn mọi trạng thái). Tỷ lệ đặt mua lần 2 là 3.12%.
+   - **93,350 khách hàng:** Tập khách hàng có đơn giao thành công hợp lệ (96,470 đơn delivered). Tỷ lệ mua lại hoàn tất là 3.00% (2,801 khách hàng). Mẫu số này được dùng thống nhất trong báo cáo, dashboard và mô hình Kimball Star Schema.
+2. **Chuẩn hóa ngày lịch (`dt.normalize()`):** Trường ngày dự kiến trong dữ liệu gốc luôn mang mốc giờ mặc định `00:00:00`. Pipeline đã chuẩn hóa cấp ngày lịch để đảm bảo đơn giao trong ngày dự kiến được tính đúng hạn (delay = 0), tránh lỗi lệch giờ làm tăng khống tỷ lệ trễ.
+3. **Bộ kiểm thử tự động (`src/test_data_integrity.py`):** Toàn bộ 5 bảng trong Star Schema, khóa chính ghép `(order_id, order_item_id)`, ràng buộc khóa ngoại (0 orphan records) và các chỉ số thống kê (96,470 đơn, 93.23% đúng hạn, Chi-square $\chi^2 = 5.2856, p = 0.0215$) đã được tích hợp bộ kiểm thử assert tự động, bảo đảm khớp số 100% giữa Python và SQLite SQL.
+
+---
+*Báo cáo được tổng hợp dựa trên kết quả tính toán định lượng chính xác từ mã nguồn Python (`src/04_exploratory_data_analysis.py`) và cơ sở dữ liệu Star Schema. Tất cả số liệu đã được kiểm thử tự động tại `src/test_data_integrity.py`.*
