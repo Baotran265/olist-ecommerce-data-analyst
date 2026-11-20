@@ -19,7 +19,7 @@ Olist là sàn thương mại điện tử kết nối các doanh nghiệp vừa
 
 ---
 
-## 💡 2. 5 Phát Hiện Kinh Doanh Trọng Yếu (Executive Insights)
+## 💡 2. 7 Phát Hiện Kinh Doanh Trọng Yếu (Executive Insights)
 
 Dựa trên việc làm sạch và phân tích **96,470 đơn hàng đã giao thành công hợp lệ** (loại bỏ các đơn thiếu ngày giao thực tế hoặc ngày dự kiến) và **93,350 khách hàng duy nhất có đơn giao thành công** giai đoạn 2016 – 2018:
 
@@ -32,13 +32,13 @@ Dựa trên việc làm sạch và phân tích **96,470 đơn hàng đã giao th
 4. **Tỷ lệ khách hàng mua lại hoàn tất (Repeat Completed Purchases): 3.00%:**
    * Trong 93,350 khách hàng có đơn giao thành công hợp lệ, có **2,801 khách hàng** từng hoàn tất giao dịch lần thứ 2 trở lên (**3.00%**). 
 5. **Tỷ lệ mua lại khác biệt theo trạng thái đơn đầu tiên giao thành công (First Delivered Order Status & Repeat Purchase):**
-   * Tỷ lệ mua lại ở nhóm khách hàng có đơn đầu tiên giao đúng hạn là **3.04%**, trong khi nhóm có đơn đầu tiên bị trễ đạt **2.52%** (mức chênh lệch tương đối khoảng **17.1%**, kiểm định Chi-Square $\chi^2 \approx 5.29, p = 0.0215$). Kết quả phản ánh sự khác biệt có ý nghĩa thống kê trong tập dữ liệu quan sát; đây là **mối liên hệ quan sát được**, không phải bằng chứng khẳng định giao trễ là **nguyên nhân duy nhất** làm giảm tỷ lệ mua lại. Đề xuất thử nghiệm cơ chế theo dõi ưu tiên cho nhóm này và đối chiếu với nhóm chứng trước khi triển khai rộng rãi.
-6. **Xu hướng Thời gian & Mùa vụ (Khai thác `dim_date` 2017–2018):**
-   * Doanh thu mở rộng từ **111.8k R$** (tháng 1/2017) lên đỉnh **987.6k R$** vào Black Friday (tháng 11/2017). 
-   * Áp lực logistics vào các đợt cao điểm mùa vụ làm tăng vọt tỷ lệ trễ (tháng 11/2017: **11.91%**, tháng 3/2018: **18.05%**), kéo điểm đánh giá rớt mạnh xuống **3.75 ★ – 3.90 ★**. Khi tỷ lệ trễ hạ nhiệt về **1.16%** (tháng 6/2018), điểm đánh giá lập tức hồi phục lên **4.21 ★ – 4.27 ★**.
+   * Tỷ lệ mua lại ở nhóm khách hàng có đơn đầu tiên giao đúng hạn là **3.04%**, trong khi nhóm có đơn đầu bị trễ đạt **2.52%** (mức chênh lệch tương đối khoảng **17.1%**, kiểm định Chi-Square $\chi^2 \approx 5.29, p = 0.0215$). Kết quả phản ánh sự khác biệt có ý nghĩa thống kê trong tập dữ liệu quan sát; đây là **mối liên hệ quan sát được**, không phải bằng chứng khẳng định giao trễ là **nguyên nhân duy nhất** làm giảm tỷ lệ mua lại. Đề xuất thử nghiệm cơ chế theo dõi ưu tiên cho nhóm này và đối chiếu với nhóm chứng trước khi triển khai rộng rãi.
+6. **Xu hướng Thời gian & Mùa vụ (Order-Level `dim_date` 2017–2018):**
+   * Doanh thu sản phẩm mở rộng từ **111.8k R$** (tháng 1/2017, 750 đơn) lên đỉnh **987.6k R$** vào Black Friday (tháng 11/2017, 7,288 đơn). 
+   * Áp lực logistics vào các đợt cao điểm mùa vụ đi kèm tỷ lệ trễ tăng cao (tháng 11/2017: **12.40%**, tháng 2/2018: **14.13%**, tháng 3/2018: **18.96%**), kéo điểm đánh giá trung bình toàn sàn giảm xuống **3.81 ★ – 3.99 ★**. Khi tỷ lệ trễ hạ nhiệt về **1.16%** (tháng 6/2018), điểm đánh giá lập tức hồi phục lên **4.31 ★**.
 7. **Mô phỏng Ước lượng Tác động Vận hành (Scenario Modeling):**
    * **Tối ưu logistics tại Alagoas (AL):** Nếu giảm tỷ lệ trễ từ 21.41% về mức mục tiêu 10.00% (chuyển ~45 đơn trễ sang đúng hạn), điểm review trung bình của bang dự kiến tăng từ **3.85 ★ lên 4.08 ★** (+0.23 ★, vượt ngưỡng 4 sao).
-   * **Kiểm soát SLA 48h cho 11 Seller rủi ro:** Đưa tỷ lệ trễ của nhóm từ 9.00% về chuẩn sàn (4.5%) giúp cứu vãn ~144 đơn hàng và bảo vệ hơn **22,000 R$** doanh thu khỏi nguy cơ khiếu nại.
+   * **Kiểm soát SLA 48h cho 11 Seller rủi ro:** Giả định mô phỏng đưa tỷ lệ trễ của nhóm từ 9.00% về 4.5% (tương ứng ~144 đơn chuyển sang đúng hạn × giá trị đơn hàng trung bình của nhóm, ước tính giả định > **22,000 R$** giá trị đơn hàng ít gặp rủi ro trễ hẹn hơn, không phải lợi ích chắc chắn đạt được).
    * **Bảo vệ đơn đầu tiên:** Giảm tỷ lệ trễ đơn đầu từ 6.77% xuống 3.50% giúp giữ chân thêm ước tính **~16 khách hàng trung thành** quay lại mua lần 2 mà không tốn chi phí CAC.
 
 > 📌 **Tính Liêm Chính Phương Pháp Luận (Methodological Notes):**
@@ -48,7 +48,7 @@ Dựa trên việc làm sạch và phân tích **96,470 đơn hàng đã giao th
 >   - **93,350 khách hàng duy nhất có đơn giao thành công:** Tính trên tập 96,470 đơn delivered hợp lệ. Mẫu số chuẩn được dùng trên Power BI Dashboard, Star Schema và Báo cáo để tính **Tỷ lệ Mua lại Hoàn tất: 3.00%** (2,801 / 93,350 khách hàng).
 > - **Giới hạn quan sát (Right-Censoring):** Khách hàng có đơn đầu tiên vào cuối giai đoạn dữ liệu có ít thời gian hơn để phát sinh đơn mua lại. Tỷ lệ mua lại 3.00% được tính trên toàn bộ dữ liệu tĩnh, không tương đương với tỷ lệ retention trong một cửa sổ cố định (như 60 ngày).
 > - **Tương quan (Correlation) vs Nhân quả (Causation):** Dữ liệu quan sát cho thấy mối liên hệ giữa thời gian giao trễ, điểm đánh giá và tỷ lệ mua lại, nhưng chưa thể kết luận quan hệ nhân quả duy nhất. Các đề xuất vận hành được định vị là **Giả thuyết kinh doanh cần kiểm chứng qua thử nghiệm có nhóm đối chứng (A/B Testing)**.
-> - 🔒 **Kiểm chứng tính toàn vẹn dữ liệu (Data Grain Integrity):** Đã thực hiện kiểm tra tính nhất quán của `review_score` và `is_delayed` tại cấp độ `order_id` trên tập đơn hàng giao thành công hợp lệ. Truy vấn kiểm tra `COUNT(DISTINCT ...)` không trả về đơn hàng có nhiều giá trị khác nhau. Kết quả hỗ trợ giả định rằng mỗi đơn hàng có một giá trị review và trạng thái giao trễ nhất quán, giảm nguy cơ đếm trùng khi tổng hợp. Các kết quả định lượng (Q3: 3,201 đơn, trễ 9.00%, dispatch 7.04 ngày; Q5: $\chi^2 \approx 5.29, p = 0.0215$) đã được xác minh khớp với dữ liệu đầu ra và kiểm thử tự động tại `src/test_data_integrity.py`.
+> - 🔒 **Kiểm chứng tính toàn vẹn dữ liệu (Data Grain Integrity):** Đã thực hiện kiểm tra tính nhất quán của `review_score` và `is_delayed` tại cấp độ `order_id` trên tập đơn hàng giao thành công hợp lệ. Truy vấn kiểm tra `COUNT(DISTINCT ...)` không trả về đơn hàng có nhiều giá trị khác nhau. Kết quả hỗ trợ giả định rằng mỗi đơn hàng có một giá trị review và trạng thái giao trễ nhất quán, giảm nguy cơ đếm trùng khi tổng hợp. Toàn bộ chỉ số (Q1–Q6, Q3: 3,201 đơn, trễ 9.00%, dispatch 7.04 ngày; Q5: $\chi^2 \approx 5.29, p = 0.0215$; Q6: chuỗi thời gian 23 tháng cấp order) đã được xác minh khớp 100% giữa Python, Notebook (143/143 checks) và SQLite (`src/test_data_integrity.py`).
 
 ---
 
@@ -103,29 +103,33 @@ erDiagram
     dim_customers ||--o{ fact_order_items : "customer_id"
     dim_sellers ||--o{ fact_order_items : "seller_id"
     dim_products ||--o{ fact_order_items : "product_id"
+
 ```
 
 * **Bảng Fact:** `fact_order_items` (112,650 dòng, Grain = 1 sản phẩm trong 1 đơn hàng).
 * **Các bảng Dimension:** `dim_customers` (99,441 dòng), `dim_sellers` (3,095 dòng), `dim_products` (32,951 dòng), `dim_date` (1,096 dòng).
 * **Kỹ thuật xử lý Grain Mismatch trong DAX:** Do `review_score` là dữ liệu ở cấp độ đơn hàng (`order-level`), nhưng bảng Fact lại có độ chi tiết là cấp độ sản phẩm (`item-level`), toàn bộ các measure tính trung bình đều sử dụng công thức Grain-Safe:
-  ```dax
-  Avg Review Score Delivered = 
-  AVERAGEX(
-      FILTER(
-          SUMMARIZE(
-              fact_order_items, 
-              fact_order_items[order_id], 
-              fact_order_items[order_status],
-              fact_order_items[is_valid_delivery_delay],
-              fact_order_items[review_score]
-          ),
-          fact_order_items[order_status] = "delivered" && 
-          fact_order_items[is_valid_delivery_delay] = 1 &&
-          NOT(ISBLANK(fact_order_items[review_score]))
-      ),
-      fact_order_items[review_score]
-  )
-  ```
+```dax
+Avg Review Score Delivered = 
+AVERAGEX(
+    FILTER(
+        SUMMARIZE(
+            fact_order_items, 
+            fact_order_items[order_id], 
+            fact_order_items[order_status],
+            fact_order_items[is_valid_delivery_delay],
+            fact_order_items[review_score]
+        ),
+        fact_order_items[order_status] = "delivered" && 
+        fact_order_items[is_valid_delivery_delay] = 1 &&
+        NOT(ISBLANK(fact_order_items[review_score]))
+    ),
+    fact_order_items[review_score]
+)
+
+```
+
+
 
 ---
 
@@ -134,18 +138,18 @@ erDiagram
 Bộ biểu đồ khoa học được sinh tự động bằng Seaborn/Matplotlib với độ phân giải xuất bản **300 DPI**:
 
 | Hình 1: Mối Liên Hệ Giữa Độ Trễ Giao Hàng & Điểm Đánh Giá | Hình 2: Hiệu Suất Vận Chuyển Theo Bang |
-| :---: | :---: |
-| ![Delivery Delay vs Review Score](outputs/figures/fig1_delivery_delay_vs_review_score.png) | ![State Performance](outputs/figures/fig2_state_delivery_performance.png) |
+| --- | --- |
+|  |  |
 | *Điểm đánh giá trung bình có xu hướng giảm ở các nhóm trễ, đặc biệt thấp từ ngày trễ thứ 4 trở đi* | *Tỷ lệ giao hàng trễ ghi nhận mức cao tại một số bang Đông Bắc* |
 
 | Hình 3: Ma Trận Phân Loại Rủi Ro Seller | Hình 4: Hiệu Suất Danh Mục Sản Phẩm |
-| :---: | :---: |
-| ![Seller Matrix](outputs/figures/fig3_seller_risk_matrix.png) | ![Category Performance](outputs/figures/fig4_category_performance_matrix.png) |
+| --- | --- |
+|  |  |
 | *Xác định nhóm người bán doanh thu cao nhưng điểm đánh giá kém* | *Xếp hạng doanh thu và tỷ trọng cước phí vận chuyển theo ngành hàng* |
 
 | Hình 5: Tỷ Lệ Khách Hàng Mua Lại Theo Trạng Thái Đơn Đầu Tiên |
-| :---: |
-| ![Customer Retention](outputs/figures/fig5_customer_retention_and_first_order_impact.png) |
+| --- |
+|  |
 | *Chênh lệch tỷ lệ mua lại giữa nhóm đơn đầu đúng hạn (3.04%) và giao trễ (2.52%), chênh lệch tương đối ~17.1% (mối liên hệ quan sát được, p = 0.0215)* |
 
 ---
@@ -177,7 +181,7 @@ olist-ecommerce-data-analyst/
 │   └── images/              # Ảnh chụp màn hình 3 trang Power BI Dashboard
 ├── sql/
 │   ├── 01_create_star_schema.sql      # Script DDL khởi tạo 5 bảng & 7 Performance Indexes
-│   └── 02_kpi_business_queries.sql    # 5 câu lệnh SQL phân tích KPI (Window, CTEs, Rank)
+│   └── 02_kpi_business_queries.sql    # 6 câu lệnh SQL phân tích KPI (Window, CTEs, Rank)
 ├── src/
 │   ├── 00_audit_and_setup.py          # Phase 0: Kiểm toán môi trường & thư mục
 │   ├── 01_data_understanding.py       # Phase 1: Trích xuất metadata & từ điển dữ liệu
@@ -190,6 +194,7 @@ olist-ecommerce-data-analyst/
 ├── requirements.txt         # Danh mục thư viện Python cần thiết
 ├── .gitignore               # Cấu hình bỏ qua file nhị phân & dữ liệu lớn
 └── README.md                # Tài liệu tổng quan dự án
+
 ```
 
 ---
@@ -197,11 +202,14 @@ olist-ecommerce-data-analyst/
 ## 🚀 7. Hướng Dẫn Chạy Dự Án (Getting Started)
 
 ### Bước 1: Tải Dữ Liệu Gốc từ Kaggle
+
 Dữ liệu gốc không được đưa vào repository (`.gitignore`). Bạn cần tải từ Kaggle:
+
 1. Truy cập [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
 2. Tải xuống và giải nén 9 file CSV vào thư mục `data/raw/`.
 
 ### Bước 2: Cài Đặt Môi Trường
+
 ```bash
 # Tạo môi trường ảo Python
 python -m venv .venv
@@ -211,9 +219,11 @@ python -m venv .venv
 
 # Cài đặt thư viện
 pip install -r requirements.txt
+
 ```
 
 ### Bước 3: Chạy Pipeline & Kiểm Thử Toàn Diện
+
 ```bash
 python src/00_audit_and_setup.py          # Kiểm toán môi trường & thư mục
 python src/01_data_understanding.py       # Trích xuất metadata & từ điển dữ liệu
@@ -222,6 +232,7 @@ python src/03_data_cleaning.py            # Làm sạch & Feature Engineering
 python src/04_exploratory_data_analysis.py# Phân tích thống kê & Vẽ biểu đồ
 python src/05_build_star_schema.py        # Xây dựng Star Schema & nạp SQLite DB
 python src/test_data_integrity.py         # Chạy bộ kiểm thử tự động (Assert 100% Pass)
+
 ```
 
 ---
@@ -235,4 +246,16 @@ python src/test_data_integrity.py         # Chạy bộ kiểm thử tự độn
 * **Kiến trúc Dữ liệu:** `Ralph Kimball Dimensional Modeling` (Star Schema, Fact-Dimension Separation, Grain Management)
 * **Kiểm định Thống kê:** `Scipy.stats` (Chi-Square Test of Independence)
 * **Quản lý Mã nguồn:** `Git`, `GitHub`
+
+```
+
+---
+
+### Các điểm đã đồng bộ trong bản `README.md` trên:
+* **Mục 6 (Xu hướng Thời gian & Mùa vụ):** Đồng bộ toàn bộ chỉ số order-level theo `EXPECTED_MONTHLY` và SQL Query 6 (`11/2017: 12.40%`, `02/2018: 14.13%`, `03/2018: 18.96%`, review `3.81 ★ – 3.99 ★`, `06/2018: 1.16%`, review `4.31 ★`).
+* **Mục 2 & Ghi chú phương pháp luận:** Chỉnh tiêu đề thành `7 Phát Hiện Kinh Doanh Trọng Yếu` cho khớp đúng 7 mục liệt kê bên dưới, bổ sung thông tin đối chiếu 143/143 checks của Notebook và SQL Q6.
+* **Cấu trúc thư mục:** Cập nhật `sql/02_kpi_business_queries.sql` thành **6 câu lệnh SQL** thay vì 5.
+
+Bạn có muốn mình xuất tiếp bản cập nhật đồng bộ tương tự cho `docs/06_business_insights_report.md` luôn để commit cùng một lần không?
+
 ```
