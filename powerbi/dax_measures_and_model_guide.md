@@ -1,6 +1,3 @@
-Xin lỗi bạn, lỗi do giới hạn độ dài phản hồi của hệ thống nên bị cắt ngang. Dưới đây là **toàn bộ nội dung file markdown từ đầu đến cuối**, liền mạch và không bị cắt. Bạn chỉ cần nhấn nút **Copy** ở góc trên bên phải của khối code bên dưới và dán đè vào file `powerbi/dax_measures_and_model_guide.md`:
-
-```markdown
 # POWER BI DATA MODEL & DAX MEASURES GUIDE
 
 > **Dự án:** Olist Brazilian E-Commerce Analytics  
@@ -114,7 +111,7 @@ CALCULATE(
 )
 
 -- 10. Số đơn hàng bị giao trễ hẹn (Delivered Late)
---     ️ KPI tổng quát dashboard, dùng is_valid_delivered (đơn có ngày giao thực tế)
+--     KPI tổng quát dashboard, dùng is_valid_delivered (đơn có ngày giao thực tế)
 --     ⚠️ KHÔNG dùng measure này làm tử số của Delay Rate %
 --     Delay Rate % dùng tử số riêng với filter is_valid_delivery_delay = 1 (xem Measure 11)
 Delayed Orders = 
@@ -181,7 +178,7 @@ CALCULATE(
 )
 
 -- 15. Số ngày trễ trung bình đối với các đơn bị trễ (Grain-Safe)
---     ️ Dùng để tái tạo Q1 Python EDA
+--     Dùng để tái tạo Q1 Python EDA
 --     Chỉ xét các đơn có dữ liệu độ trễ hợp lệ (is_valid_delivery_delay = 1) và thực sự bị trễ
 Avg Days Delayed = 
 CALCULATE(
@@ -240,7 +237,7 @@ CALCULATE(
 )
 
 -- 19. Tỷ lệ đánh giá 1 sao (% 1-Star Ratio trên tập có đánh giá)
---     ️ Dùng để tái tạo Q1 Python EDA
+--     Dùng để tái tạo Q1 Python EDA
 --     Mẫu số: Valid Reviews Count (đã dùng is_valid_delivery_delay = 1)
 1-Star Rate % = 
 DIVIDE([1-Star Reviews], [Valid Reviews Count], 0)
@@ -366,7 +363,7 @@ Các measure này cần dùng cùng bộ lọc hợp lệ như Python để đ�
 
 ---
 
-## ️ 4. Thiết kế Cấu trúc Dashboard (3-Page Layout Recommendation)
+## 🖥️ 4. Thiết kế Cấu trúc Dashboard (3-Page Layout Recommendation)
 
 ### Trang 1: Executive Overview (Tổng quan Điều hành)
 - **Hàng KPI Cards (Top):** Gross Order Value (R$ 15.42M) / Delivered Revenue (R$ 13.22M) | Delivered Orders (96.5K) | On-Time Delivery Rate (93.2%) | Avg Review Score (4.16 ★) | Repeat Purchase Rate (3.00%).
@@ -388,4 +385,3 @@ Các measure này cần dùng cùng bộ lọc hợp lệ như Python để đ�
 
 ---
 *Tài liệu này được biên soạn cho Power BI Desktop kết nối trực tiếp với Olist Kimball Star Schema.*
-```

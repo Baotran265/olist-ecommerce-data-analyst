@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS fact_order_items (
 -- --------------------------------------------------------------------
 -- 6. PERFORMANCE INDEXES
 -- --------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_fact_order ON fact_order_items(order_id);
+-- (order_id đã được phủ bởi index của PRIMARY KEY (order_id, order_item_id))
 CREATE INDEX IF NOT EXISTS idx_fact_cust ON fact_order_items(customer_id);
 CREATE INDEX IF NOT EXISTS idx_fact_seller ON fact_order_items(seller_id);
 CREATE INDEX IF NOT EXISTS idx_fact_prod ON fact_order_items(product_id);

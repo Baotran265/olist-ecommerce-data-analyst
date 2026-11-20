@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # 1. Lùi 1 cấp ra khỏi thư mục src để về thư mục gốc dự án
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))  # Thư mục src

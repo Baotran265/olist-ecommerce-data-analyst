@@ -40,11 +40,11 @@ MISSING_RULES = {
     ('olist_products_dataset.csv', 'product_category_name'):
         ('Trung bình', "Điền nhãn 'Unknown' ở Phase 4", 'Tránh mất dòng sản phẩm khi phân tích'),
     ('olist_products_dataset.csv', 'product_name_lenght'):
-        ('Thấp', 'Điền giá trị trung vị (median)', 'Bổ trợ thuộc tính sản phẩm'),
+        ('Thấp', 'Giữ nguyên (cột không dùng trong phân tích, không đưa vào dim_products)', 'Bổ trợ thuộc tính sản phẩm'),
     ('olist_products_dataset.csv', 'product_description_lenght'):
-        ('Thấp', 'Điền giá trị trung vị (median)', 'Bổ trợ thuộc tính sản phẩm'),
+        ('Thấp', 'Giữ nguyên (cột không dùng trong phân tích, không đưa vào dim_products)', 'Bổ trợ thuộc tính sản phẩm'),
     ('olist_products_dataset.csv', 'product_photos_qty'):
-        ('Thấp', 'Điền giá trị 0', 'Sản phẩm không có ảnh hiển thị'),
+        ('Thấp', 'Điền giá trị trung vị (median)', 'Bổ trợ thuộc tính sản phẩm'),
     ('olist_products_dataset.csv', 'product_weight_g'):
         ('Thấp', 'Điền giá trị trung vị (median)', 'Cần thiết để tính toán logistics'),
     ('olist_products_dataset.csv', 'product_length_cm'):

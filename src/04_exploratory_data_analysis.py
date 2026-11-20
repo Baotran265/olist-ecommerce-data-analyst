@@ -80,7 +80,7 @@ def analyze_delivery_delay_vs_satisfaction(df):
     # Subplot 1: Điểm đánh giá trung bình theo từng mức trễ
     colors = [ACCENT_GREEN, '#a1d99b', ACCENT_ORANGE, ACCENT_RED]
     bars = ax1.bar(bucket_stats['delay_bucket'], bucket_stats['mean_review'], color=colors, width=0.55, edgecolor='black', linewidth=0.5)
-    ax1.set_title('Average Review Score by Delivery Delay Bucket', fontsize=13, fontweight='bold', pad=15)
+    ax1.set_title('Average Review Score by Delivery Delay Bucket\n(Observed association, not proof of causation)', fontsize=13, fontweight='bold', pad=15)
     ax1.set_ylabel('Mean Review Score (1 to 5 Stars)', fontsize=11)
     ax1.set_ylim(0, 5)
     ax1.axhline(deliv_valid['review_score'].mean(), color=NEUTRAL_GRAY, linestyle='--', label=f"Overall Mean: {deliv_valid['review_score'].mean():.2f} / 5")
@@ -93,7 +93,7 @@ def analyze_delivery_delay_vs_satisfaction(df):
 
     # Subplot 2: Tỷ lệ đánh giá 1 sao (Cực kỳ không hài lòng)
     bars2 = ax2.bar(bucket_stats['delay_bucket'], bucket_stats['pct_1_star'], color=colors, width=0.55, edgecolor='black', linewidth=0.5)
-    ax2.set_title('% of 1-Star Reviews by Delivery Delay Bucket', fontsize=13, fontweight='bold', pad=15)
+    ax2.set_title('% of 1-Star Reviews by Delivery Delay Bucket\n(Share of 1-star reviews rises sharply from the 4-7 day bucket)', fontsize=13, fontweight='bold', pad=15)
     ax2.set_ylabel('% of 1-Star Reviews', fontsize=11)
     ax2.set_ylim(0, 80)
 

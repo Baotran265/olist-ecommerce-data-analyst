@@ -6,9 +6,9 @@ olist_orders_dataset.csv,order_delivered_customer_date,Khuyết dữ liệu (Mis
 olist_order_payments_dataset.csv,payment_value,Giá trị thanh toán bằng 0,9,0.0087%,Thấp,Điều tra đơn giảm giá / đơn thử nghiệm,Đơn giá trị 0 ảnh hưởng đến tính toán AOV
 olist_order_reviews_dataset.csv,review_comment_title,Khuyết dữ liệu (Missing),87656,88.34%,Cao (High),"Giữ nguyên, phân tích flag has_comment",Khách hàng thường chỉ chấm sao mà không viết tiêu đề
 olist_products_dataset.csv,product_category_name,Khuyết dữ liệu (Missing),610,1.85%,Trung bình,Điền nhãn 'Unknown' ở Phase 4,Tránh mất dòng sản phẩm khi phân tích
-olist_products_dataset.csv,product_name_lenght,Khuyết dữ liệu (Missing),610,1.85%,Thấp,Điền giá trị trung vị (median),Bổ trợ thuộc tính sản phẩm
-olist_products_dataset.csv,product_description_lenght,Khuyết dữ liệu (Missing),610,1.85%,Thấp,Điền giá trị trung vị (median),Bổ trợ thuộc tính sản phẩm
-olist_products_dataset.csv,product_photos_qty,Khuyết dữ liệu (Missing),610,1.85%,Thấp,Điền giá trị 0,Sản phẩm không có ảnh hiển thị
+olist_products_dataset.csv,product_name_lenght,Khuyết dữ liệu (Missing),610,1.85%,Thấp,"Giữ nguyên (cột không dùng trong phân tích, không đưa vào dim_products)",Bổ trợ thuộc tính sản phẩm
+olist_products_dataset.csv,product_description_lenght,Khuyết dữ liệu (Missing),610,1.85%,Thấp,"Giữ nguyên (cột không dùng trong phân tích, không đưa vào dim_products)",Bổ trợ thuộc tính sản phẩm
+olist_products_dataset.csv,product_photos_qty,Khuyết dữ liệu (Missing),610,1.85%,Thấp,Điền giá trị trung vị (median),Bổ trợ thuộc tính sản phẩm
 olist_products_dataset.csv,product_weight_g,Khuyết dữ liệu (Missing),2,0.01%,Thấp,Điền giá trị trung vị (median),Cần thiết để tính toán logistics
 olist_products_dataset.csv,product_length_cm,Khuyết dữ liệu (Missing),2,0.01%,Thấp,Điền giá trị trung vị (median),Cần thiết để tính toán logistics
 olist_products_dataset.csv,product_height_cm,Khuyết dữ liệu (Missing),2,0.01%,Thấp,Điền giá trị trung vị (median),Cần thiết để tính toán logistics
